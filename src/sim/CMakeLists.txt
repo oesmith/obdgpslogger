@@ -37,6 +37,8 @@ ENDIF(NOT OBD_SIM_DISABLE_BLUEZ)
 SET(OBDSIM_POSIXSRCS
 	posixsimport.cc
 	posixsimport.h
+	tcpsimport.cc
+	tcpsimport.h
 )
 
 SET(OBDSIM_WINDOWSSRCS
