@@ -1,0 +1,21 @@
+Source: obdgpslogger
+Section: science
+Priority: extra
+Maintainer: Gary Briggs <chunky@icculus.org>
+Build-Depends: debhelper (>= 7.0.50), cmake (>= 2.6), libdbus-1-dev, libfltk1.1-dev, fluid, libgps-dev, libsqlite3-dev
+Standards-Version: 3.9.1
+Homepage: http://icculus.org/obdgpslogger
+Vcs-Browser: http://svn.icculus.org/obdgpslogger
+Vcs-Svn: svn://svn.icculus.org/obdgpslogger/trunk
+
+Package: obdgpslogger
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Suite of tools to log OBDII and GPS data
+ OBDII is a standard for getting diagnostic information from your car.
+ The main tool, obdgpslogger, is a command-line tool to log that data,
+ with your gps position, to a sqlite database. Provided alongside are
+ various tools used to convert logs to formats such as CSV or Google
+ Earth KML.
+ Also contained in the package is an OBDII and ELM327 simulator, obdsim,
+ that uses plugins to generate data.

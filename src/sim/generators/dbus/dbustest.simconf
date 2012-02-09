@@ -1,0 +1,46 @@
+# obdsim dbus plugin sample config file
+#
+#    This sample works with fbd based signals from Fusion Brain devices
+#    Originally written by cgalpin on the mp3car forums
+#
+#    fbd is a Linux daemon that listens talks to fusion brain devices. It's
+#    available here:
+#    http://www.mp3car.com/vbulletin/fusion-brain/129622-fusion-brain-program-linux.html
+#
+# We specifically listen to only one member from one path from
+#    one interface
+
+# The message for the member-path-interface 3-tuple must come in as two
+#    numbers. The first is mapped to a PID using this file. The second
+#    is a real or integer that is the actual value.
+
+# bus can be "session" or "system"
+bus=system
+
+interface=org.openice.fbd.fusionbrain
+
+path=/org/openice/fbd
+
+member=AnalogValueChanged
+
+# Some sample mappings.
+# Each mapping is of the form:
+# map {decimal FB analog input} -> {hex PID}
+# Where 0 >= {analog input} < 13
+#   and PID is the OBDII service command
+
+# Map engine temperature
+map 1 -> 0x05
+
+# Map airflow mass
+map 2 -> 0x10
+
+# Map rpm
+map 3 -> 0x0C
+
+# Map vss
+map 11 -> 0x0D
+
+# Map throttlepos
+map 12 -> 0x11
+

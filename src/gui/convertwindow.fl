@@ -1,0 +1,157 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include <string.h>} {} 
+
+decl {\#include <FL/Fl.H>} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
+decl {\#include "obdgui.h"} {public
+} 
+
+decl {\#include "maindisplay.h"} {public
+} 
+
+class obdconvertwindow {open
+} {
+  Function {obdconvertwindow(OBDUI *obdui)} {open
+  } {
+    code {mConvertType = CONVERT_KML;} {}
+    Fl_Window window {
+      label {Convert OBD Log...} open
+      xywh {749 124 555 195} type Double
+      code0 {o->set_modal();}
+      code1 {o->hide();} visible
+    } {
+      Fl_Group allcontrols {open
+        xywh {95 10 310 135}
+      } {
+        Fl_File_Input logfilename {
+          label {Log File}
+          xywh {95 10 310 30}
+          code0 {o->value(obdui->getLogfilename());}
+        }
+        Fl_File_Input outputfilename {
+          label {Output File}
+          xywh {95 45 310 30}
+          code0 {o->value("./obdlogger.kml");}
+        }
+        Fl_Choice convertchoice {
+          label {Convert to...} open
+          xywh {95 85 310 25} down_box BORDER_BOX
+        } {
+          MenuItem {} {
+            label {Google Earth (.kml)}
+            callback {mConvertType = CONVERT_KML;}
+            xywh {0 0 100 20}
+          }
+          MenuItem {} {
+            label {CSV (.csv)}
+            callback {mConvertType = CONVERT_CSV;}
+            xywh {0 0 31 20}
+          }
+        }
+        Fl_Button convertbutton {
+          label Convert
+          callback {convert();}
+          xywh {180 120 105 25}
+        }
+        Fl_Button donebutton {
+          label Done
+          callback {window->hide();}
+          xywh {295 120 105 25}
+        }
+      }
+      Fl_Progress progressbar {
+        label {Conversion Progress} selected
+        xywh {25 160 510 25} selection_color 138
+        code0 {o->value(0);}
+      }
+      Fl_Button logchooser {
+        label {Choose...}
+        callback {Fl_File_Chooser f(mMainui->getLogfilename(),
+  "OBDGPS Logfiles (*.db)\\tAll Files (*)",
+  Fl_File_Chooser::SINGLE, "Choose OBD GPS Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  logfilename->value(f.value());}
+        private xywh {415 10 120 30}
+      }
+      Fl_Button outchooser {
+        label {Choose...}
+        callback {Fl_File_Chooser f(".",
+  "Google Earth (*.kml)\\tCSV (*.csv)\\tAll Files (*)",
+  Fl_File_Chooser::CREATE, "Choose Output Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  outputfilename->value(f.value());}
+        private xywh {415 45 120 30}
+      }
+    }
+    code {mMainui = obdui;} {}
+  }
+  Function {~obdconvertwindow()} {open
+  } {}
+  decl {OBDUI *mMainui;} {}
+  decl {enum obd_convert_type mConvertType;} {}
+  Function {show()} {open
+  } {
+    code {window->show();} {}
+  }
+  Function {hide()} {open
+  } {
+    code {window->hide();} {}
+  }
+  Function {convert()} {open
+  } {
+    code {FILE *p;
+float progresspercentage;
+char line[255];
+char cmd[1024] = "\\0";
+
+allcontrols->deactivate();
+
+switch(mConvertType) {
+  case CONVERT_KML:
+    //printf("Converting to KML\\n");
+    snprintf(cmd, sizeof(cmd), "obd2kml -p -d %s -o %s",
+      mMainui->getLogfilename(), outputfilename->value());
+    break;
+  case CONVERT_CSV:
+    //printf("Converting to CSV\\n");
+    snprintf(cmd, sizeof(cmd), "obd2csv -p -d %s -o %s",
+      mMainui->getLogfilename(), outputfilename->value());
+    break;
+  default:
+    //printf("Not converting anything\\n");
+    break;
+}
+
+if(0 < strlen(cmd) && NULL == (p = popen(cmd, "r"))) {
+  perror(cmd);
+} else {
+  while(NULL != fgets(line, sizeof(line), p)) {
+    if(0 < sscanf(line, "%f", &progresspercentage)) {
+      progressbar->value(progresspercentage);
+      Fl::check();
+    }
+  }
+  progressbar->value(100); // Because the conversion tools may not be 100% accurate
+  pclose(p);
+}
+
+allcontrols->activate();} {}
+  }
+} 

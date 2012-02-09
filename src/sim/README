@@ -1,0 +1,14 @@
+OBD Simulator for OBD GPS Logger
+
+
+This "borrows excessively" from ObdSim,
+Copyright (C) 2008 by Michael Carpenter (malcom2073)
+
+I have massacred his code beyond recognition for this module in
+obdgpslogger, so I cannot point to individual parts that are necessarily
+copyright Michael as opposed to me - please consider anything in this
+module to be copyrighted code by both Michael Carpenter and myself.
+
+Gary "Chunky_Ks" Briggs
+<chunky@icculus.org>
+

@@ -1,0 +1,29 @@
+.TH obdlogrepair 1
+.SH NAME
+obdlogrepair \- Attempt to repair a disfunctional logfile
+
+.SH SYNOPSIS
+.B obdlogrepair <file>
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Occasionally, log file discrepancies pop up in logs created by
+obdgpslogger. For example, some database formats make it possible for
+trips to not be ended - in those cases, no data is later output for
+that trip. This attempts to fix that and various other issues.
+
+Additionally, this is a tool intended for backward-compatibility
+usage. Log files created in the past may be incompatible with newer
+versions of the software. This tool will be used to move schema versions.
+
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdgpslogger(1), obd2kml(1), obd2csv(1), obd2gpx(1), obdgui(1), obdsim(1)"
+
+.SH BUGS
+.IX Header "BUGS"
+I'd suggest you back up your data before running this.
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

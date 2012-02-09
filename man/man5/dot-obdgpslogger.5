@@ -1,0 +1,78 @@
+.TH dot-obdgpslogger 5
+.SH NAME
+dot-obdgpslogger \- configuration file for obdgpslogger
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Configuration file for obdgpslogger
+
+.B Comments
+Any line whose first non-whitespace character is a # is a comment
+
+.B obddevice=<string>
+Full path to obd device entry [typically /dev/something]
+
+.B gpsdevice=<string>
+Full path to gps device entry [typically /dev/something]
+
+.B log_columns=<string>
+Command-separated list of db_column entries to log. These are
+probably things you want to draw from "obdgpslogger \-p"
+
+.B log_file=<string>
+Write to this logfile. Can be relative or absolute path
+
+.B samplerate=<integer>
+Number of samples to take per second. 0 for "as fast as you can"
+
+.B baudrate=<integer>
+Set serial port baudrate to this. \-1 disables attempt to change, or 0
+to let the software try to guess.
+
+.B baudrate_upgrade=<integer>
+Upgrade the baudrate to this after successful setup. \-1 disables attempt
+to change, or 0 to let the software try to figure out the best choice.
+
+.B optimisations=<integer>
+Set to 1 to enable ELM optimisations
+
+.SH FILES TO PARSE
+.IX Header "FILES TO PARSE"
+The system loads these files, in order. Each one overwrites any settings
+from the file before it:
+.P
+1) /etc/obdgpslogger
+.P
+2) $HOME/.obdgpslogger
+.P
+3) /var/run/obdftdipty.device
+.P
+4) getenv("OBD_CONFIGFILE")
+
+
+.SH ENVIRONMENT VARIABLES
+.IX Header "ENVIRONMENT VARIABLES"
+
+.TP 5
+OBD_CONFIGFILE
+.br
+Full path to the obd config file you wish to read
+
+.TP 5
+HOME
+.br
+If set, read .obdgpslogger from this dir
+
+.TP 5
+APPDATA
+.br
+If HOME isn't set, will attempt to read .obdgpslogger from here instead
+
+
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdgpslogger(1), obdgui(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

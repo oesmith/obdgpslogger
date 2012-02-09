@@ -1,0 +1,21 @@
+OBDGPSLogger OpenSolaris jucr stuff
+
+
+This is for building stuff on jucr.opensolaris.org
+
+Build environment instructions here:
+http://blogs.sun.com/jucr/entry/setting_up_your_own_build
+
+I build from this dir thus:
+
+. /opt/dtbld/bin/env.sh # Yes, there's a . at the start
+pkgtool build --download \
+	--src=`pwd` \
+	--specdirs=/export/home/chunky/src/spec-files-jucr/include/ \
+	--interactive \
+	obdgpslogger.spec
+
+spec-files-jucr is checked out from
+svn+ssh://anon@svn.opensolaris.org/svn/sourcejuicer/spec-files-jucr/trunk
+
+Gary (-;

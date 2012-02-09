@@ -1,0 +1,44 @@
+From: http://www.mp3car.com/vbulletin/engine-management-obd-ii-engine-diagnostics-etc/75138-calculating-mpg-vss-maf-obd2.html
+
+
+
+For the record, the first "one-line" MPG formula above, taken from
+my Circuit Cellar article, is off by 100!  The "4.54" should in
+fact be "454".  The correct formula is:
+
+MPG = (14.7 * 6.17 * 454 * VSS * 0.621371) / (3600 * MAF / 100) MPG
+= 710.7 * VSS / MAF
+
+Note that OBD-II VSS reading is in kilometers/hour and MAF reading
+is grams/sec times 100.
+
+This formula works very well in a modern automobile because the
+engine computer spends almost 100% of its time managing the
+fuel-air-ratio to 14.7, which it can do very well because of the
+"closed loop" feedback from the O2 sensor(s).
+
+In fact, the accuracy of this method has been proven in literally
+tens of thousands of gasoline-powered vehicles.  Accuracy within a
+few percent is typical, often limited by the accuracy of the vehicle
+speed reading (i.e., VSS).
+
+As for other ways of doing this, especially if you don't have a MAF
+sensor, by knowing the displacement of the engine, and after a
+simple "calibration" using fuel tank "fill-up" data to find the
+only unknown, namely the "volumetric efficiency" (VE) of the engine,
+MAF can be calculated from RPM, MAP and IAT.  With VE, one can use
+the following formulas to calculate a synthetic "mass air-flow"
+(MAF) in grams per second, all without a MAF sensor, using the
+"Ideal Gas Law", as follows:
+
+IMAP = RPM * MAP / IAT MAF = (IMAP/120)*(VE/100)*(ED)*(MM)/(R)
+
+where manifold absolute pressure (MAP) is in kPa, intake air temp
+(IAT) is in degrees Kelvin, R is 8.314 J/°K/mole and the average
+molecular mass of air (MM) is 28.97 g/mole.  Note that, in the above
+formula, the volumetric efficiency of the (4-cycle!) engine is
+measured in percent and the engine displacement (ED) is in liters.
+
+The VE of my 1999 7.4L Chevy Suburban is about 65%.  Smaller, higher
+performance engines can have VE's of 85% or higher.
+

@@ -1,0 +1,88 @@
+.TH obdsim-dbus 5
+.SH NAME
+obdsim-dbus \- configuration file for DBus obdsim generator
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Configuration file for obdsim's DBus Generator
+
+No Defaults are provided, all values must be specified. You must specify
+the full bus-interface-path-member dbus 4-tuple, and then as many mappings
+as you like.
+
+The plugin listens only for signals, and updates an internal list
+with the last signal received. The first two numbers in a signal are
+parsed: the first is a numeric "key", the second is a numeric "value"
+.P
+The keys are mapped to PIDs via the "map" command in this config file.
+
+.B "bus=<session|system>"
+.br
+DBus bus - can be either session or system. For fbd [fusion brain daemon],
+this should be system.
+
+.B "interface=<interface name>"
+.br
+DBus interface. For fbd, this should be org.openice.fbd.fusionbrain
+
+.B "path=<full dbus path>"
+.br
+DBus path. For fbd, this should be /org/openice/fbd
+
+.B "member=<member name>"
+.br
+DBus member to listen to. For fbd, this should be AnalogValueChanged
+
+.B "map <decimal input> => <hex PID>"
+.br
+Easiest is an example. If a dbus signal is sent as "11" "3.2", then:
+.br
+.B "map 11 => 0x0D"
+.br
+Will cause 3.2 to be reported as the throttle position next time it
+is requested.
+
+
+.SH EXAMPLE CONFIG
+.IX Header "EXAMPLE CONFIG"
+
+Below is a sample configuration file, for use with fbd, Fusion Brain Daemon
+
+bus=system
+.br
+interface=org.openice.fbd.fusionbrain
+.br
+path=/org/openice/fbd
+.br
+member=AnalogValueChanged
+.br
+# Some sample mappings.
+.br
+# Map engine temperature
+.br
+map 1 -> 0x05
+.br
+# Map airflow mass
+.br
+map 2 -> 0x10
+.br
+# Map rpm
+.br
+map 3 -> 0x0C
+.br
+.br
+# Map vss
+.br
+map 11 -> 0x0D
+.br
+# Map throttlepos
+.br
+map 12 -> 0x11
+
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdsim(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

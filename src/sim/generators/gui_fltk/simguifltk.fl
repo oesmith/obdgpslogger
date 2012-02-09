@@ -1,0 +1,313 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <string.h>} {} 
+
+decl {\#include <stdio.h>} {} 
+
+decl {\#include "obdservicecommands.h"} {} 
+
+decl {\#include "dtccodes.h"} {} 
+
+decl {\#include "datasource.h"} {public
+} 
+
+class SimGenGui_Fltk {open
+} {
+  Function {SimGenGui_Fltk()} {open
+  } {
+    Fl_Window w {
+      label {OBDII Simulator} open
+      xywh {1730 221 565 310} type Double visible
+    } {
+      Fl_Menu_Bar {} {open
+        xywh {0 0 565 20}
+      } {
+        Submenu {} {
+          label {&File} open
+          xywh {0 0 70 21} labelsize 14
+        } {
+          MenuItem {} {
+            label {&Quit}
+            callback {w->hide();}
+            xywh {0 0 36 21} labelsize 14
+          }
+        }
+      }
+      Fl_Group {} {
+        label {Mode 1 Values} open
+        xywh {5 45 370 260} box UP_BOX labelsize 11
+      } {
+        Fl_Dial simval_rpm {
+          label {Engine RPM}
+          callback {output_rpm->value(o->value());}
+          xywh {25 60 100 90} type Line labelsize 11
+          code0 {configure_widget(o,"rpm");}
+        }
+        Fl_Dial simval_throttlepos {
+          label {Throttle Position}
+          callback {output_throttlepos->value(o->value());}
+          xywh {135 60 100 90} type Line labelsize 11
+          code0 {configure_widget(o,"throttlepos");}
+        }
+        Fl_Dial simval_maf {
+          label {Mass Airflow}
+          callback {output_maf->value(o->value());}
+          xywh {85 185 100 90} type Line labelsize 11
+          code0 {configure_widget(o,"maf");}
+        }
+        Fl_Dial simval_vss {
+          label {Vehicle Speed}
+          callback {output_vss->value(o->value());}
+          xywh {210 185 100 90} type Line labelsize 11
+          code0 {configure_widget(o,"vss");}
+        }
+        Fl_Dial simval_temp {
+          label {Engine Temp}
+          callback {output_temp->value(o->value());}
+          xywh {250 60 100 90} type Line labelsize 11
+          code0 {configure_widget(o,"temp");}
+        }
+        Fl_Value_Output output_rpm {
+          xywh {45 130 60 20} step 1
+        }
+        Fl_Value_Output output_throttlepos {
+          xywh {155 130 60 20} step 1
+        }
+        Fl_Value_Output output_temp {
+          xywh {270 130 60 20} step 1
+        }
+        Fl_Value_Output output_maf {
+          xywh {105 255 60 20} step 1
+        }
+        Fl_Value_Output output_vss {
+          xywh {230 255 60 20} step 1
+        }
+      }
+      Fl_Group {} {
+        label DTCs open
+        xywh {380 45 180 260} box UP_BOX labelsize 11
+      } {
+        Fl_Check_Button dtc_report {
+          label {Report DTCs}
+          xywh {385 275 115 25} down_box DOWN_BOX labelsize 11
+        }
+        Fl_Check_Button dtc_mil {
+          label MIL
+          xywh {510 275 45 25} down_box DOWN_BOX labelsize 11
+          code0 {o->value(1);}
+        }
+        Fl_Check_Browser dtc_list {
+          label {Click DTC to remove}
+          callback {dtc_removeunchecked(o);}
+          xywh {385 105 165 170} labelsize 11 align 1 when 1 textsize 11
+          code0 {o->add("P0103", 1);}
+        }
+        Fl_Input dtc_addcode {
+          xywh {385 60 125 20} labelsize 11 textsize 11
+        }
+        Fl_Button {} {
+          label Add
+          callback {if(dtc_isvalid(dtc_addcode->value())) {
+	dtc_list->add(dtc_addcode->value(),1);
+	dtc_addcode->value("");
+}
+	
+Fl::redraw();}
+          xywh {515 60 35 20} labelsize 11
+        }
+      }
+    }
+    code {addSupportedCommand("dtc_cnt");} {}
+  }
+  Function {show()} {open
+  } {
+    code {w->show();} {}
+  }
+  Function {configure_widget(Fl_Dial *w, const char *name)} {open return_type void
+  } {
+    code {addSupportedCommand(name);
+
+struct obdservicecmd *osc = obdGetCmdForColumn(name);
+if(NULL == osc) w->range(0,200);
+else w->range(osc->min_value,osc->max_value);} {}
+  }
+  decl {unsigned long supportedpids_00;} {public
+  }
+  decl {unsigned long supportedpids_20;} {public
+  }
+  decl {unsigned long supportedpids_40;} {public
+  }
+  decl {unsigned long supportedpids_60;} {public
+  }
+  Function {addSupportedCommand(const char *columnname)} {} {
+    code {struct obdservicecmd *cmd = obdGetCmdForColumn(columnname);
+
+if(NULL == cmd) {
+	fprintf(stderr,"Couldn't find cmd for column %s\\n", columnname);
+	return;
+}
+
+unsigned int pid = cmd->cmdid;
+
+if(pid <= 0x20) {
+	supportedpids_00 |= ((unsigned long)1<<(0x20 - pid));
+} else if(pid > 0x20 && pid <= 0x40) {
+	supportedpids_20 |= ((unsigned long)1<<(0x40 - pid));
+} else if(pid > 0x40 && pid <= 0x60) {
+	supportedpids_40 |= ((unsigned long)1<<(0x60 - pid));
+} else if(pid > 0x60 &&  pid <= 0x80) {
+	supportedpids_60 |= ((unsigned long)1<<(0x80 - pid));
+} else {
+	fprintf(stderr,"Don't support PIDs this high in sim yet: %i\\n", pid);
+}} {}
+  }
+  Function {dtc_removeunchecked(Fl_Check_Browser *brows)} {open
+  } {
+    code {int i = brows->nitems();
+
+for(;i>0;i--) {
+	if(0 == brows->checked(i)) {
+		brows->remove(i);
+	}
+}} {}
+  }
+} 
+
+Function {guifltk_simgen_name()} {return_type {const char *}
+} {
+  code {return "gui_fltk";} {}
+} 
+
+Function {guifltk_simgen_longdesc()} {return_type {const char *}
+} {
+  code {return "GUI generator using FLTK\\n"
+	"Seed: Ignored";} {}
+} 
+
+Function {guifltk_simgen_create(void **gen, const char *seed)} {return_type int
+} {
+  code {SimGenGui_Fltk *f = new SimGenGui_Fltk();
+
+if(NULL == f) return 1;
+
+f->show();
+
+*gen = static_cast<void *>(f);
+return 0;} {}
+} 
+
+Function {guifltk_simgen_destroy(void *gen)} {return_type void
+} {
+  code {delete static_cast<SimGenGui_Fltk *>(gen);} {}
+} 
+
+Function {guifltk_simgen_getvalue(void *gen, unsigned int mode, unsigned int PID, unsigned int *A, unsigned int *B, unsigned int *C, unsigned int *D)} {open return_type int
+} {
+  code {SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
+if(NULL == f || 0 == f->w->shown()) {
+	return -1;
+}
+
+
+if(0x00 == PID || 0x20 == PID || 0x40 == PID || 0x60 == PID) {
+	unsigned long bits = 0;
+	
+	if(0x00 == PID) bits = f->supportedpids_00;
+	else if(0x20 == PID) bits = f->supportedpids_20;
+	else if(0x40 == PID) bits = f->supportedpids_40;
+	else if(0x60 == PID) bits = f->supportedpids_60;
+	else return 0;
+
+	*D = bits & 0xFF;
+	bits >>= 8;
+	*C = bits & 0xFF;
+	bits >>= 8;
+	*B = bits & 0xFF;
+	bits >>= 8;
+	*A = bits & 0xFF;
+
+	return 4;
+
+} else if(0x01 == PID) {
+	*B = *C = *D = 0x00;
+	
+	if(f->dtc_report->value()) {
+		*A = (f->dtc_mil->value()?0x80:0x00);
+		*A += f->dtc_list->nitems();
+	} else {
+		*A = 0;
+	}
+	
+	return 4;
+} else {
+
+	struct obdservicecmd *cmd = obdGetCmdForPID(PID);
+
+	if(NULL == cmd || NULL == cmd->db_column || 0 == strlen(cmd->db_column))
+		return 0;
+
+	if(0 == strcmp(cmd->db_column, "vss")) {
+		return cmd->convrev(f->simval_vss->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "rpm")) {
+		return cmd->convrev(f->simval_rpm->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "maf")) {
+		return cmd->convrev(f->simval_maf->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "throttlepos")) {
+		return cmd->convrev(f->simval_throttlepos->value(), A, B, C, D);
+	} else if(0 == strcmp(cmd->db_column, "temp")) {
+		return cmd->convrev(f->simval_temp->value(), A, B, C, D);
+	}
+	
+	return 0;
+}} {}
+} 
+
+Function {guifltk_simgen_idle(void *gen, int idlems)} {return_type int
+} {
+  code {Fl::wait(idlems/1000.0f);
+SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
+if(0 == f->w->shown()) {
+	return -1;
+}
+return 0;} {}
+} 
+
+Function {guifltk_simgen_clearerrorcodes(void *gen)} {open return_type int
+} {
+  code {SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
+if(NULL == f || 0 == f->w->shown()) {
+	return -1;
+}
+
+f->dtc_report->value(0);
+
+return 0;} {}
+} 
+
+Function {guifltk_simgen_geterrorcodes(void *gen, unsigned int *errorcodes, int num_codes, int *mil)} {open return_type int
+} {
+  code {SimGenGui_Fltk *f = static_cast<SimGenGui_Fltk *>(gen);
+if(NULL == f || 0 == f->w->shown()) {
+	return -1;
+}
+
+if(0 == f->dtc_report->value() || 0 == f->dtc_list->nitems()) {
+	return 0;
+}
+
+int i;
+for(i=1;i<=f->dtc_list->nitems() && i<num_codes;i++) {
+	unsigned int A = 0;
+	unsigned int B = 0;
+	dtc_humantobytes(f->dtc_list->text(i), &A, &B);
+	errorcodes[2*i-2] = A;
+	errorcodes[2*i-1] = B;
+}
+
+return f->dtc_list->nitems();} {selected
+  }
+} 
+
+decl {\#include "gen_gui_fltk.c"} {} 

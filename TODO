@@ -1,0 +1,90 @@
+obdgpslogger:
+
+High CPU Usage?
+
+Multiple ECU support
+ - New table "ECUs", containing ID,VIN,ECUID,ECU Desc [090A]. Possibly others?
+
+Optimisations:
+ - Change --enable-optimisations to take a version number or allow
+     granular control?
+ - ATCRA/ATCM & ATCF to make sure only engine ecu is replying
+
+Daemon stuff
+ - Add pidfile
+ - Option to just not log stuff at all
+
+
+obdlogrepair:
+
+Catenate and split logfiles
+
+
+obdsim:
+
+gui_fltk plugin maybe dynamically generate widgets, let user specify PIDs
+
+Move loop waiting time into simports - select for a timeslice on the
+  actual port, rather than usleep then select for zero time on the port.
+
+
+obdtripcompare:
+
+Don't add petrol mass for parts of trips we don't have gps for [start and end]
+
+
+obd2kml:
+
+Add more graphs? What's useful?
+
+Fix progress reporting while drawing individual graphs
+
+Add timestamps to graphs, so google earth can animate appropraitely.
+
+
+obdgui:
+
+Real-time graphs as well as the current gauges.
+
+Move GPSD Wizard and Convert Wizard into separate Tabs?
+
+Better shortcuts. Alt-F4/Apple-Q/Ctrl-Q should quit. Probably not escape.
+
+
+obd2osm:
+
+OpenStreetMap possibilities:
+
+1) Doing stuff the "right" [ish] way
+Download multiple .osm segments to encompass the whole area of a trip
+ http://www.openstreetmap.org/api/0.5/map?bbox=-0.5,51.3,-0.4,51.4
+ bbox params are WEST, SOUTH, EAST, NORTH
+
+Export trip data as a .osm file if can figure out how to render an
+overlay using it. Just marking stuff as "road" won't work.
+
+This bit may not be necessary if osmarender lets you have different
+rules with different files:
+Use Osmosis to combine .osm segments and trip .osm file into single .osm file
+ http://wiki.openstreetmap.org/wiki/Osmosis
+ osmosis --rx file2.osm --rx file1.osm --m --wx merged.osm
+
+Use osmarender to render .osm file to useful output
+ http://wiki.openstreetmap.org/wiki/Osmarender
+
+2) Still working off raw OSM data
+Same as #1, but use osmarender to create tiles then draw overlay ourselves
+using, eg, imagemagick or libsvg or something.
+
+3) Piggyback someone else for all the hard stuff
+Download rendered tiles from openstreetmap directly, overlay our trace
+on top of it, using general purpose image editing libraries
+
+Might be a bad idea, since you're mostly borrowing bandwidth from
+OSM. On the plus side, it'd be easy.
+
+4) Webby interface: http://openlayers.org/
+Perhaps create a web interface flavor output? Should be possible to dump
+a simple HTML file that has the data from the logfile, and hotlink to
+the javascript data source?
+

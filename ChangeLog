@@ -1,0 +1,182 @@
+Version 0.16 (released 2011-05-26)
+ comm: Much longer timeout for devices that take a long time to init
+ kml: minor performance and SQL cosmetic fixes
+ logger: fix long-standing bug when gps sometimes appears to lock up
+ Initial add of livekml PHP script for watching live Google Earth
+ Conf: Accept hex PIDs as well as human names for log_columns
+ Sim Cycle gen: provide pids up to 0x60
+ build: Option to use systemwide sqlite3 lib instead of local copy
+ Sim: Support protocols with ATSP{A,}{0-9,A-C}, show appropriate headers
+ Sim: Add --benchmark option for occasional updates
+ Sim: Refactor to simplify main loop
+ Sim: Add a timeout for each individual ecu
+ Sim: Add simple checksum when headers are enabled
+ Sim: ATD{0,1} support
+
+Version 0.15 (released 2010-06-18)
+ Sim: Always return errors in groups of three, padded if necessary
+ Logrepair: split repair functions into separate library
+ kml: Fix errors that caused some singlevalue plots to not plot
+ Sim: Freezeframe [mode 0x02] support
+ Logrepair: run PRAGMA integrity_check
+ Arch Linux packaging
+ Initial add of obd2gpx converter
+ kml: Add graph based solely on gps data
+ Logger: log course,speed,gpstime from gps
+
+Version 0.14 (released 2010-04-02)
+ Sim: gui_fltk has dials instead of input boxes
+ obdfft: Show axes ranges on graph, fix CSV parsing issue
+ Logger: Bundle up several seconds of updates into single transactions
+ Sim: Option to listen on bluetooth
+ Logger: Baudrate guesser
+ Logger: Baudrate upgrader
+ Move obd comms into separate library
+ Sim: Multiple ECU support [attach a generator for each ecu]
+ Sim: Random,cycle generators don't return values they can't support
+ Sim: Support for modes 0x03,0x04
+ Sim: Add "Error" data generator
+ Sim: gui_fltk now has support for DTCs
+
+Version 0.13 (released 2010-02-27)
+ Opensolaris packaging [for jucr]
+ Read OBD_CONFIGFILE environment variable for a config file
+ Initial add of simple data analysis tool [fourier filter against db columns]
+ Logger can redirect stdout/err to a file
+ obdsim: Ability to use a real device instead of a pty on unix
+ Logger: Add columns to log if tables already existed
+ Logger: Create DB with IF NOT EXISTS to reduce warnings
+ Logger,Logrepair: Add indexed tripid column to obd and gps tables
+ Kml: Use tripids where possible instead of times to key on trips
+ Kml: Warn if tripids are missing from obd or gps tables
+ Kml: Don't output kml for trips without gps co-ordinates
+ Kml: Add trip number to graphs
+ Initial add of simple trip comparison tool [mpg, fuel usage]
+ Sim: dlopen generator takes a sub-seed
+ Logger: Gracefully handle delayed gpsd startup
+ Logrepair: Run ANALYZE against log
+
+Version 0.12 (released 2010-01-03)
+ ftdipty: Support user-specified device and vendor ids
+ Logger: Support gpsd V3 protocol
+ Sim: Support ATI, ATL{0,1}
+ Sim: Tidy up linefeed handling throughout app
+
+Version 0.11 (released 2009-11-25)
+ Logger: Recognise multi-line serial output, break out line parsing
+ Logger: Work on reading error codes
+ Logger: Always clean up serial port on early exit
+ Sim: bugfixes
+ Sim: Move to stdlib read/write instead of stdio
+ Sim: Simplify output mechanism
+ Sim: Use /dev/ptmx if posix_openpt isn't available
+ Sim: Optionally attach a screen session
+ Sim: Add "Cycle" generator
+ Sim: Add longdesc to generators so they can self-document
+ Docs: Add manpage for obdsim-dbus
+ Sim: Convert to C++. Make simport abstract class
+ Sim: Implement posix, windows simport classes
+ Logger: Don't offer to daemonise on windows
+ Sim: Support logging all serial comms
+ Sim: Allow command-line options for faking AT{Z,@1}
+ Logger: Attempt to guess supported PIDs if car reports zero for 0100
+ Sim: Add shell of megasquirt code
+
+Version 0.10 (released 2009-10-31)
+ Logger, conf: Ability to adjust serial baudrate
+ Initial add of ftdi-pty proxy for systems without ftdi-sio
+ conf: Add ability to write config file back to disk
+ ftdipty can modify config file for obdgpslogger
+ Logger, conf: Ability to configure logfile name
+ Logger: Gracefully exit if a serial write fails
+ Logger,doc: Hotplug docs
+ Logger: cygwin compilation fixes
+ Sim: Don't build socket generator without getaddrinfo symbol
+ Logger: If obd device isn't available, exit [would log gps before]
+
+Version 0.9 (released 2009-09-25)
+ Logger: Create indices on tables when the tables are created
+ obd2kml: Small table optimisations
+ New tool: obdlogrepair. Small tool to fix any minor issues in logfile
+ obdsim: Initial add of socket generator [for wifi obd devices]
+ obd2csv: Take --start and --end time parameters
+ obd2csv: add option to gzip csv file
+ obdsim: dbus plugin work with more types on the bus
+ config,logger: Make columns to log run-time configurable
+ obd2kml: Add date to start & end beacons
+ Logger: fix stupid wait on startup
+ Logger: Adding ability to handle OBD errors
+
+Version 0.8 (released 2009-09-04)
+ Put Copyright/GPL notices in all files
+ Cosmetic build improvements
+ obdsim: Add idle callback to generators
+ obdsim: Messing with serial comms
+ logger: Make newline configurable
+ logger: Add timeout on database in case someone's scraping it
+ obdsim: Initial add of fltk gui generator
+ logger: Add option to daemonise
+ obdsim: Add mode to all getvalue module calls
+ logger: Catch SIGTERM to gracefully exit
+ obdsim: Seed Random generator with passed seed
+ manpage: describe obdsim seeds
+ obd2csv,obd2kml,obdsim logger: Don't create the database file
+ logger: adding some dbus methods
+
+Version 0.7 (released 2009-06-25)
+ Initial add of new module, obdsim
+ obdsim plugins: dlopen, Logger, DBus, Random
+
+Version 0.6 (released 2009-06-15)
+ Move obdlogger source into its own subdir
+ logger optimisation: remove all spaces in obd streams
+ logger: add a serial port communications log
+ logger: move capabilities into its own file, add features
+ logger: Only create database columns, and only try to log, supported pids
+ logger: add serial port logging option
+ cmake: default gps dev [for ui] separately compile-time configurable
+ logger: Dbus support, announce obd samples using SYSTEM dbus
+ logger: reset elm device when we begin, and when we exit
+ Add common "conf" library to read configuration common to all components
+
+Version 0.5 (released 2009-05-22)
+ Move common obdinfo into its own library
+ add to obdinfo so programs can know units, max, min, etc
+ obdgpslogger: Convert values returned from obd to actual numbers
+ obdgpslogger: option to list supported PIDs in current OBD device
+ obd2kml: add graph of vss/rpm [roughly "gear ratio"]
+ obdgpslogger,obdgui: Take out start/stop trip buttons
+ obdgui: Set dial ranges based on real value ranges
+ obdgpslogger: Do not disable the gps database functions
+ obdgpslogger: Portability improvements in signal handling
+ cmake: Create a configure.h file so string #defs will work with xcode
+ obdgui: Add a gpsd launch wizard
+ cmake: Use cpack to build packages.
+ cmake: Create app bundle, including gpsd on osx
+ obdgui: Make some semi-educated guesses about device names
+
+Version 0.4 (released 2009-04-10)
+ Add obdgui
+ obdgpslogger: Add option to spam engine info to stdout
+ obdgpslogger: Accept SIGUSR{1,2} to start and stop trips
+ obdgpslogger: always create gps table to avoid SQL breakage
+ obdgpslogger: optimisation options
+ obdgpslogger: printf/fprintf(stderr) tidying
+ obdgpslogger: clean up trip handling when going through gui
+ obdgpslogger: Add log window in GUI that shows all output from logger
+ obd2csv,obd2kml: provide progress output if requested
+
+Version 0.3 (released 2009-04-01)
+ Add obd2csv
+ obdgpslogger: samplerate [-a] now works
+ obdgpslogger: time inserted as a real for sub-second usefulness
+ obdgpslogger: getobdvalue returns a useful status value
+ obdgpslogger: support for "trips", when the engine stops and starts
+ obd2kml: do something useful with trips
+
+Version 0.2 (released 2009-03-24)
+ Change obdlogger binary to obdgpslogger
+ CMake sniglets to make it more fink-friendly
+
+Version 0.1 (released 2009-03-23)
+ Initial Release

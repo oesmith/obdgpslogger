@@ -1,0 +1,42 @@
+.TH obd2csv 1
+.SH NAME
+obd2csv \- Convert obdgpslogger(1) logs to csv files
+
+.SH SYNOPSIS
+.B obd2csv [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Convert obdgpslogger(1) logs to csv files
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-o|--out <output filename>"
+Output to this .csv file
+.IP "-d|--db <database>"
+Work from logs stored in this database file
+.IP "-s|--start <time>"
+Only dump rows more recent than this
+.IP "-e|--end <time>"
+Only dump rows older than this
+.IP "-z|--gzip"
+gzip compress output using zlib [if available]
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH NOT OPTIONS
+.IX Header "NOT OPTIONS"
+These options aren't intended for end-users, they're for the GUI.
+.IP "-p|--progress"
+Print out progress. It will occasionally print a number in the range
+[0..100], indicating progress percentage.
+
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdgpslogger(1), obd2kml(1), obd2gpx(1), obdsim(1), obdgui(1), obdlogrepair(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

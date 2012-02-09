@@ -1,0 +1,179 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <sys/types.h>} {public
+} 
+
+decl {\#include <signal.h>} {public
+} 
+
+decl {\#include <sys/wait.h>} {} 
+
+decl {\#include <unistd.h>} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
+decl {\#include "guessdevs.h"} {} 
+
+decl {\#include "obdconfig.h"} {public
+} 
+
+decl {\#include "obdgui.h"} {public
+} 
+
+class GPSDWizardWindow {open
+} {
+  Function {GPSDWizardWindow()} {open
+  } {
+    Fl_Window window {
+      label {GPSD Launch Wizard} open
+      private xywh {1190 75 455 145} type Double align 80
+      code1 {// o->hide();} visible
+    } {
+      Fl_Group {} {
+        label {GPSD Options} open
+        xywh {10 25 435 75} box BORDER_BOX
+      } {
+        Fl_Group devchooser_group {open
+          xywh {100 33 345 67}
+        } {
+          Fl_Button devchooser {
+            label {Choose...}
+            callback {Fl_File_Chooser f("",
+  "All Files (*)",
+  Fl_File_Chooser::SINGLE, "GPS Device" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  gpsd_devicename->value(f.value());}
+            private xywh {360 35 80 25}
+          }
+          Fl_Input_Choice gpsd_devicename {
+            label {GPSD Device} open
+            xywh {115 33 225 28}
+          } {}
+        }
+        Fl_Check_Button broken_device_safety {
+          label {Safe Mode}
+          private xywh {265 70 90 25} down_box DOWN_BOX
+          code0 {o->set();}
+        }
+      }
+      Fl_Button launchbutton {
+        label {Launch GPSD}
+        callback {launch_gpsd();}
+        private xywh {30 110 130 25}
+      }
+      Fl_Button killbutton {
+        label {Kill GPSD}
+        callback {kill_gpsd();}
+        private xywh {185 110 130 25}
+      }
+      Fl_Button closebutton {
+        label Close
+        callback {window->hide();}
+        private xywh {360 110 70 20}
+      }
+    }
+    code {populateSerialDevs(gpsd_devicename, OBD_DEFAULT_GPSPORT);} {selected
+    }
+  }
+  Function {launch_gpsd()} {open private return_type int
+  } {
+    code {int safemode = broken_device_safety->value();
+const char *devname = gpsd_devicename->value();
+
+// printf("PATH: %s\\n", getenv("PATH"));
+int pid = fork();
+
+if(pid > 0) {  // Parent
+	sleep(2);
+	gpsd_add_device(gpsd_devicename->value());
+	return 0;
+}
+
+if(pid == 0) { // Child
+	execlp("gpsd",
+		"gpsd",
+		"-F",
+		OBD_GPSD_CONTROL_SOCKET,
+		"-P",
+		OBD_GPSD_PIDFILE,
+		// This pattern won't work if we get more options
+		safemode?"-b":NULL,
+		NULL);
+	perror("Exec failed");
+	exit(1);
+}
+
+perror("Couldn't fork to launch gpsd...\\n");
+
+return -1;} {}
+  }
+  Function {kill_gpsd()} {open private
+  } {
+    code {pid_t p = getGpsdPid();
+
+if(0 >= p) return;
+
+if(0 > kill(p,SIGTERM)) {
+	perror("Couldn't SIGTERM gpsd");
+} else {
+	sleep(1); // Give it a second to get itself dead
+	if(0 < waitpid(p, NULL, WNOHANG)) {
+		if(0 != kill(p,SIGKILL)) {
+			perror("Couldn't SIGKILL gpsd");
+		}
+	}
+}} {}
+  }
+  Function {show()} {open return_type void
+  } {
+    code {window->show();} {}
+  }
+  Function {hide()} {open return_type void
+  } {
+    code {window->hide();} {}
+  }
+  Function {getGpsdPid()} {open return_type pid_t
+  } {
+    code {FILE *pidfile = fopen(OBD_GPSD_PIDFILE, "r");
+
+if(NULL == pidfile) return -1;
+
+long pid;
+if(1 == fscanf(pidfile, "%li", &pid)) {
+	fclose(pidfile);
+	return pid;
+}
+
+fclose(pidfile);
+return -1;} {}
+  }
+  Function {gpsd_add_device(const char *devname)} {open return_type void
+  } {
+    code {if(0 >= getGpsdPid()) {
+	return;
+}
+
+if(NULL == devname || 0 == strlen(devname)) {
+	return;
+}
+
+FILE *control = fopen(OBD_GPSD_CONTROL_SOCKET, "w");
+if(NULL == control) {
+	return;
+}
+
+fprintf(control, "+%s\\n", devname);
+
+fclose(control);} {}
+  }
+  Function {~GPSDWizardWindow()} {open
+  } {
+    code {kill_gpsd();} {}
+  }
+} 

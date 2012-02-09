@@ -1,0 +1,23 @@
+List of things I have to remember to do when I make a release
+
+
+1) Check version number in CMakeLists.txt matches what I'm about to tag
+2) Mark the release date in the top ChangeLog
+3) Update opensolaris spec file, debian changelog, and archlinux PKGBUILD
+4) Tag new version:
+export VERSION=0.16
+svn cp svn://svn.icculus.org/obdgpslogger/trunk \
+	svn://svn.icculus.org/obdgpslogger/tags/obdgpslogger-$VERSION \
+	-m "Tagging $VERSION release"
+cd /webspace/projects/obdgpslogger/downloads
+svn export svn://svn.icculus.org/obdgpslogger/tags/obdgpslogger-$VERSION
+tar -cf - obdgpslogger-$VERSION | gzip -c > ./obdgpslogger-$VERSION.tar.gz
+
+5) Edit /webspace/projects/obdgpslogger/index.html to note new version download
+
+6) Announce
+obdgpslogger@icculus.org mailing list
+http://freshmeat.net/projects/obd-gps-logger
+http://www.mp3car.com/vbulletin/obdii-gps-logger/
+
+

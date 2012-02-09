@@ -1,0 +1,180 @@
+.TH obdsim 1
+.SH NAME
+obdsim \- Simulate an ELM327 device
+
+.SH SYNOPSIS
+.B obdsim [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+obdsim simulates an ELM327 device connected to one or more ECUs
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-g|--generator <generator-name>"
+Choose a generator. A list of valid ones is output by \-\-help. See section
+titled MULTIPLE ECUS below for more information.
+.IP "-s|--seed <seed>"
+Generator-specific seed. See section titled PLUGIN SEEDS below for
+more information. The \-s option must immediately follow the generator
+.IP "-d|--customdelay <delay-in-ms>"
+Generator-specific delay. This is effectively a processing time for the
+ECU it is being added for. The \-d option must immediately follow the
+generator
+.IP "-l|--list-generators"
+Print a terse list of compiled in generators
+.IP "-L|--list-protocols"
+Print a list of all protocols
+.IP "-p|--protocol <OBDII protocol>"
+Launch as this protocol. Protocol is of form [A]{digit}, where optional
+"A" prefix means automatic and the digit is from --list-protocols
+.IP "-n|--benchmark <time>"
+Change time to print samplerate to stdout. 'samples' are successful
+value returns, not AT commands or NO DATA/? responses. 'queries' are
+any and all client queries. Argument is in seconds, zero to disable.
+.IP "-q|--logfile <logfile>"
+Write all serial comms to this logfile
+.IP "-o|--launch-logger"
+Takes an [admittedly weak and hard-coded] attempt at launching
+obdgpslogger attached to the simulator in question. POSIX only.
+.IP "-c|--launch-screen"
+Takes an [admittedly weak and hard-coded] attempt at launching screen
+attached to the simulator in question. To close that screen window,
+use ctrl-a, k. POSIX only.
+.IP "-t|--tty-device"
+Instead of opening a pty, try to open this entry in /dev instead. POSIX
+only.
+.IP "-w|--com-port <comport>"
+Specify virtual com port to be used on windows [eg "COM1"]. Windows only.
+.IP "-e|--genhelp <generator-name>"
+Print out help for the specified generator, and exit.
+.IP "-V|--elm-version <version string>"
+Pretend to be this when someone resets with ATZ or similar
+.IP "-D|--elm-device <device string>"
+Pretend to be this when someone calls AT@1
+.IP "-b|--bluetooth"
+Listen on bluetooth. See section titled BLUETOOTH below
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH PLUGIN SEEDS
+.IX Header "PLUGIN SEEDS"
+Each plugin takes a seed. Here's what those seeds are:
+.IP Random
+[Optional] It's a random seed
+.IP Cycle
+[Optional] [cycle time in seconds[,number of gears]]
+.IP Logger
+[Obligatory] Filename of an obdgpslogger logfile
+.IP dlopen
+[Obligatory] Filename of a dynamically linked library
+.br
+[Optional] ",subseed" optional seed to pass to dlopen'd generator.
+.IP Socket
+[Obligatory] ip-or-hostname:port
+.IP DBus
+[Obligatory] Filename of a configuration file for the plugin
+.IP gui_fltk
+[Irrelevant] Ignores the passed seed
+.IP Error
+[Irrelevant] Ignores the passed seed
+
+.SH MULTIPLE ECUS
+.IX Header "MULTIPLE ECUS"
+OBDSim supports multiple simulated engine control units (ECUs).
+
+For each generator you specify on the command-line, it creates an ECU. To
+seed each generator, the seed must immediately follow that generator on
+the command-line.
+
+For example, this creates a sim with three ecus. The first ecu is
+simulating the passed logfile, the second is generating random numbers
+with the seed 42, and the gui generator isn't using a seed.
+
+obdsim \-g Logger \-s ces2010.db \-g Random \-s 42 \-g gui_fltk
+
+.SH SUPPORTED AT COMMANDS
+.IX Header "SUPPORTED AT COMMANDS"
+
+OBDSim does not yet support the full set of ELM327 commands. The ELM327
+datasheet covers all these in detail, but a short description of each
+AT command currently supported by obdsim is here:
+
+.IP AT{0,1,2}
+Adaptive timing off/on/vigorous
+.IP D{0,1}
+Display DLC [data bytes] on/off
+.IP L{0,1}
+Linefeed on/off [always passes a CR]
+.IP H{0,1}
+Headers on/off
+.IP S{0,1}
+Space separators on/off
+.IP E{0,1}
+Command echo on/off
+.IP SP[A]{0-9,A-C}
+Set protocol. Optional 'A' prefix on number means "automatic"
+.IP TP[A]{0-9,A-C}
+Try protocol. Same behaviour as SP[a]{0-9,A-C}. Always succeeds if protocol is known
+.IP ST{n}
+Set timeout. Hex value is multiplied by 4, and measured in ms
+.IP @1
+Request the elm device description
+.IP @2
+Request the elm device identifier
+.IP @3
+Set the elm device identifier
+.IP CVdddd
+Calibrate the current battery voltage to dd.dd
+.IP RV
+Request the current battery voltage
+.IP D
+Reset to defaults
+.IP DP
+Describe protocol
+.IP DPN
+Describe protocol by number
+.IP I
+Request the device version id
+.IP Z
+Reset the device
+.IP WS
+Reset the device, warm start
+.IP EXIT
+Not really an AT command; sending this tells obdsim to exit. Mostly
+useful in conjunction with \-\-launch\-screen
+
+.SH BLUETOOTH
+At time of writing, bluetooth is only supported on Linux. In order
+to make bluetooth work, you may need to set your bluetooth device to
+advertise that it's capable of the appropriate serial protocols.
+
+On my system here, I use the following two commands to set it temporarily
+[you'll want to substitute your own hardware address]:
+.IP
+.br
+sudo rfcomm bind 0 00:02:72:14:41:C4 1
+.br
+sudo sdptool add SP
+
+.SH NOTES
+.IX Header "NOTES"
+The default sim ELM version and device both claim to be OBDGPSLogger.
+Some software may not like this. You may find examples of popular
+hardware to be useful:
+.IP OBDPro
+.br
+obdsim \-V ELM327\\ v1.3\\ compatible \-D OBDPros\\ LLC\\ v3
+.IP OBDLink
+.br
+obdsim \-V ELM327\\ v1.3a \-D SCANTOOL.NET\\ LLC
+
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdgpslogger(1), obd2kml(1), obd2csv(1), obd2gpx(1), obdgui(1), obdlogrepair(1), obdsim-dbus(5)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

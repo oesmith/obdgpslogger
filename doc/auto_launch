@@ -1,0 +1,44 @@
+There's a couple different things in obdgpslogger to make it easy to
+use in an auto-launch-when-you-plug-it-in kind of way:
+
+
+0) If you're going to have your gps and OBDII devices both plugged in
+when you boot, you need to implement some kind of delay
+
+That's what udev_delay.sh in this dir does. Read it, instead
+
+
+1) Modify the config file /etc/obdgpslogger to point the logfile where
+you'd like to save it, probably on removable media. eg
+
+log_file=/media/usbthumb/carlog.db
+
+If you have an OBDLink or other device that defaults to 38400 baud
+instead of 9600, then add this line to that file, also:
+
+baudrate=38400
+
+
+2a) If your system has the ftdi kernel module [ie, regular Linux boxes]
+
+Add a rule to launch obdgpslogger: /etc/udev/rules.d/40-ftdi.rules
+
+SUBSYSTEM!="tty", GOTO="ftdi_rules_end"
+ACTION=="add", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obdgpslogger -ms /dev/%k"
+LABEL="ftdi_rules_end"
+
+
+2b) If your system does not have the ftdi kernel module [eg, older
+SheevaPlugs or Ubunu 9.10 with buggy ftdi_sio]
+
+Create a shell script in /usr/local/bin called "obd_ftdilaunch.sh":
+
+#!/bin/sh
+/usr/local/bin/obdftdipty -cdb 38400
+# If your device defaults to 9600 baud, just use "-cd"
+exec /usr/local/bin/obdgpslogger
+
+Add a rule to launch obdgpslogger: /etc/udev/rules.d/40-ftdi.rules
+
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", RUN+="/usr/local/bin/obd_ftdilaunch.sh"
+

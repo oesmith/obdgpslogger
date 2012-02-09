@@ -1,0 +1,824 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0300 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include <string.h>} {} 
+
+decl {\#include <math.h>} {} 
+
+decl {\#include <fftw3.h>} {public
+} 
+
+decl {\#include <FL/Fl.H>} {public
+} 
+
+decl {\#include <FL/Fl_Chart.H>} {public
+} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
+decl {\#include "sqlite3.h"} {public
+} 
+
+declblock {\#ifndef max} {open after {\#endif}
+} {
+  decl {\#define max(a,b) ((a)>(b)?(a):(b))} {}
+} 
+
+class FFTOBD {open
+} {
+  decl {sqlite3 *db;} {}
+  decl {fftw_complex *rawdata;} {}
+  decl {fftw_complex *plotdata;} {}
+  decl {fftw_complex *transformeddata;} {}
+  decl {int dataitems; // Number of items allocated in rawdata} {}
+  decl {int plans_prepared;} {}
+  decl {fftw_plan ff_forward;} {}
+  decl {fftw_plan ff_backward;} {}
+  Function {FFTOBD()} {open
+  } {
+    Fl_Window mainwindow {
+      label FFTOBD open
+      xywh {593 222 810 645} type Double hide resizable
+    } {
+      Fl_Group {} {open
+        xywh {0 -5 815 655} resizable
+      } {
+        Fl_Menu_Bar {} {
+          xywh {0 0 815 25}
+        } {
+          Submenu {} {
+            label {&File}
+            xywh {0 0 100 20} labelsize 14
+          } {
+            MenuItem {} {
+              label {&Open DB}
+              callback {Fl_File_Chooser f(".",
+	"OBDGPS Logfiles (*.db)\\tAll Files (*)",
+	Fl_File_Chooser::SINGLE, "Choose OBD GPS Logfile" );
+f.show();
+while(f.shown()) {
+	Fl::check();
+}
+if(0 >= f.count())
+	return;
+
+if(0 != opendb(f.value())) {
+	// Error
+}}
+              xywh {0 0 100 20} labelsize 14
+            }
+            MenuItem {} {
+              label {Open CSV}
+              callback {Fl_File_Chooser f(".",
+	"Single Column data (*.csv)\\tAll Files (*)",
+	Fl_File_Chooser::SINGLE, "Choose CSV file" );
+f.show();
+while(f.shown()) {
+	Fl::check();
+}
+if(0 >= f.count())
+	return;
+
+if(0 != opencsv(f.value())) {
+	// Error
+}}
+              xywh {0 0 100 20} labelsize 14
+            }
+            MenuItem {} {
+              label {&Save}
+              callback {Fl_File_Chooser f(".",
+	"Single Column data (*.csv)\\tAll Files (*)",
+	Fl_File_Chooser::CREATE, "Save As..." );
+f.show();
+while(f.shown()) {
+	Fl::check();
+}
+if(0 >= f.count())
+	return;
+
+if(0 != savedata(f.value())) {
+	// Error
+}}
+              xywh {0 0 23 17} labelsize 14
+            }
+            MenuItem {} {
+              label {&Quit}
+              callback {mainwindow->hide();}
+              xywh {0 0 100 20} labelsize 14
+            }
+          }
+        }
+        Fl_Value_Output chart_ymax {
+          xywh {760 30 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_ymin {
+          xywh {760 450 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_xmax {
+          xywh {750 475 45 20} labelsize 8 textsize 8
+        }
+        Fl_Value_Output chart_xmin {
+          xywh {5 475 45 20} labelsize 8 textsize 8
+        }
+        Fl_Box fftchart_raw {
+          xywh {5 25 800 490} resizable
+          code0 {o->type(FL_LINE_CHART);}
+          class Fl_Chart
+        }
+        Fl_Box fftchart {
+          xywh {5 25 800 490}
+          code0 {o->type(FL_LINE_CHART);}
+          class Fl_Chart
+        }
+        Fl_Input_Choice columnchoice {
+          label {DB Column}
+          callback {printf("Chose %s\\n", o->value());
+loaddata();}
+          xywh {60 550 140 20} labelsize 10 when 1 textsize 10 deactivate
+        } {}
+        Fl_Input_Choice tripchoice {
+          label Trip
+          callback {printf("Chose trip %s\\n", o->value());
+loaddata();}
+          xywh {60 585 140 20} labelsize 10 when 1 textsize 10 deactivate
+        } {}
+        Fl_Value_Slider bendcurveslider {
+          label {Nonlinear Granularity}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {50 615 165 20} type {Horz Knob} labelsize 10 minimum 0.1 maximum 10 step 0.1 value 2
+        }
+        Fl_Value_Slider rad_min {
+          label {Amplitude Min}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {505 550 280 20} type {Horz Knob} labelsize 10 step 0.0001
+        }
+        Fl_Value_Slider rad_max {
+          label {Amplitude Max}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {505 585 280 20} type {Horz Knob} labelsize 10 step 0.0001 value 1
+        }
+        Fl_Value_Slider freq_min {
+          label {Frequency Min}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {210 550 280 20} type {Horz Knob} labelsize 10 step 0.0001
+        }
+        Fl_Value_Slider freq_max {
+          label {Frequency Max}
+          callback {thereandbackagain();
+renderplotdata();}
+          xywh {210 585 280 20} type {Horz Knob} labelsize 10 step 0.0001 value 1
+        }
+        Fl_Button {} {
+          label {Reset Options}
+          callback {resetsliders();}
+          xywh {415 614 145 20} labelsize 10
+        }
+        Fl_Value_Slider graphstart {
+          label {Graph Start}
+          callback {renderplotdata();}
+          xywh {65 519 310 20} type {Horz Knob} labelsize 10 align 4
+        }
+        Fl_Value_Slider graphend {
+          label {Graph End}
+          callback {renderplotdata();}
+          xywh {440 519 310 20} type {Horz Knob} labelsize 10 align 8 value 1
+        }
+        Fl_Check_Button showrawdata {
+          label {Show Raw Data}
+          callback {renderplotdata();}
+          xywh {655 620 100 15} down_box DOWN_BOX value 1 labelsize 11
+        }
+      }
+    }
+    code {loadfftwwisdom();
+
+plans_prepared = 0;
+
+db = NULL;
+
+rawdata = NULL;
+plotdata = NULL;
+transformeddata = NULL;
+dataitems = 0;
+
+resetsliders();} {}
+  }
+  Function {~FFTOBD()} {} {
+    code {closedb();
+freedata();
+
+savefftwwisdom();} {}
+  }
+  Function {show(int argc, char **argv)} {open
+  } {
+    code {mainwindow->show(argc,argv);} {}
+  }
+  Function {show()} {open
+  } {
+    code {mainwindow->show();} {}
+  }
+  Function {opendb(const char *dbfilename)} {open return_type int
+  } {
+    code {if(NULL != db) {
+	closedb();
+}
+
+resetsliders();
+
+int rc;
+rc = sqlite3_open_v2(dbfilename, &db, SQLITE_OPEN_READONLY, NULL);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Can't open database %s: %s\\n", dbfilename, sqlite3_errmsg(db));
+	sqlite3_close(db);
+	return 1;
+}
+
+
+populatechoices();
+
+
+loaddata();
+
+return 0;} {}
+  }
+  Function {opencsv(const char *csvfilename)} {open return_type int
+  } {
+    code {FILE *csvfile = fopen(csvfilename, "r");
+if(NULL == csvfile) {
+	perror(csvfilename);
+	return 1;
+}
+
+if(NULL != db) {
+	closedb();
+}
+
+resetsliders();
+
+int rc;
+rc = sqlite3_open(":memory:", &db);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Can't create memory database: %s\\n", sqlite3_errmsg(db));
+	sqlite3_close(db);
+	return 1;
+}
+
+
+char line[4096];
+if(NULL == fgets(line, sizeof(line), csvfile)) {
+	fprintf(stderr, "Couldn't get data from csv file\\n");
+	return 1;
+}
+
+int columncount = 0;
+
+// Just assume we'll have this many columns at most
+char *columns[128];
+const char delim[] = ",\\t\\n\\r";
+
+char *tok = strtok(line, delim);
+
+while(NULL != tok && columncount < sizeof(columns)/sizeof(columns[0])) {
+	columns[columncount] = strdup(tok);
+	printf("Found column %i: %s\\n", columncount, tok);
+	columncount++;
+	tok = strtok(NULL, delim);
+}
+
+
+
+char obd_create_sql[4096] = "CREATE TABLE obd (";
+
+int i;
+for(i=0;i<columncount;i++) {
+	char oneitem[64];
+	snprintf(oneitem, sizeof(oneitem), "\\"%s\\" REAL", columns[i]);
+	strncat(obd_create_sql, oneitem, sizeof(obd_create_sql) - strlen(obd_create_sql));
+	if(i<columncount-1) {
+		strncat(obd_create_sql, ", ", sizeof(obd_create_sql) - strlen(obd_create_sql));
+	}
+}
+
+strncat(obd_create_sql, ")", sizeof(obd_create_sql) - strlen(obd_create_sql));
+
+printf("Create statment: \\n%s\\n", obd_create_sql);
+
+for(i=0;i<columncount;i++) {
+	free(columns[i]);
+}
+
+char *errmsg;
+rc = sqlite3_exec(db, obd_create_sql, NULL, NULL, &errmsg);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Error creating table \\"%s\\" (%i): %s\\n", obd_create_sql, rc, errmsg);
+	sqlite3_free(errmsg);
+}
+
+sqlite3_stmt *stmt;
+
+char insert_sql[4096] = "INSERT INTO obd VALUES (";
+for(i=0;i<columncount;i++) {
+	strncat(insert_sql, "?", sizeof(insert_sql) - strlen(insert_sql));
+	if(i<columncount-1) {
+		strncat(insert_sql, ",", sizeof(insert_sql) - strlen(insert_sql));
+	}
+}
+strncat(insert_sql, ")", sizeof(insert_sql) - strlen(insert_sql));
+
+const char *dbend;
+
+rc = sqlite3_prepare_v2(db, insert_sql, -1, &stmt, &dbend);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Error preparing insert stmt \\"%s\\" (%i): %s\\n", insert_sql, rc, sqlite3_errmsg(db));
+	return 1;
+}
+
+printf("prepared \\"%s\\"\\n", insert_sql);
+
+while(NULL != fgets(line, sizeof(line), csvfile)) {
+	int curr_col = 1;
+
+	tok = strtok(line, delim);
+	
+	while(NULL != tok) {
+		// SQLite coerces types.
+		// Instead of sscanf'ing the tokens, put them into the REAL column
+		//   as text. If SQLite can coerce them, then it does. If not, it
+		//   stores them as text.
+		// When we re-export, we ask for the textual values. Either it coerces them back
+		//   or it gives us the raw text we put in
+	//	float item;
+	//	if(0 < sscanf(tok, "%f", &item)) {
+	//		sqlite3_bind_double(stmt, curr_col, item);
+	//	}
+		sqlite3_bind_text(stmt, curr_col, tok, strlen(tok), NULL);
+		curr_col++;
+		tok = strtok(NULL, delim);
+	}
+	rc = sqlite3_step(stmt);
+	sqlite3_reset(stmt);
+	sqlite3_clear_bindings(stmt);
+
+}
+
+fclose(csvfile);
+
+
+populatechoices();
+
+
+loaddata();
+
+return 0;} {}
+  }
+  Function {savedata(const char *filename)} {open private return_type int
+  } {
+    code {if(NULL == db || 0 == dataitems || NULL == plotdata) {
+	return 1;
+}
+
+sqlite3_stmt *stmt;
+
+int rc;
+const char *dbend;
+
+rc = sqlite3_prepare_v2(db, "SELECT * FROM obd", -1, &stmt, &dbend);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Couldn't prepare SELECT * stmt (%i): %s\\n", rc, sqlite3_errmsg(db));
+	return 1;
+}
+
+if(SQLITE_ROW != sqlite3_step(stmt)) {
+	fprintf(stderr, "No rows returned by stmt\\n");
+	return 1;
+}
+
+FILE *f = fopen(filename, "w");
+if(NULL == f) {
+	perror(filename);
+	return 1;
+}
+
+
+int i;
+for(i=0;i<sqlite3_column_count(stmt);i++) {
+	fprintf(f, "%s,", sqlite3_column_name(stmt, i));
+}
+
+sqlite3_reset(stmt); // Otherwise we lose the first row
+
+fprintf(f, "Original %s,Filtered %s,,Frequency,%f,%f,,Amplitude,%f,%f,,Power,%f\\n",
+	columnchoice->value(), columnchoice->value(),
+	freq_min->value(), freq_max->value(),
+	rad_min->value(), rad_max->value(),
+	bendcurveslider->value()
+	);
+	
+for(i=0; i<dataitems; i++) {
+	if(SQLITE_ROW == sqlite3_step(stmt)) {
+		int j;
+		for(j=0;j<sqlite3_column_count(stmt);j++) {
+			// Let sqlite coerce the values into text
+			fprintf(f, "%s,", sqlite3_column_text(stmt, j));
+		}
+	}
+	
+	fprintf(f, "%f,%f\\n", rawdata[i][0], plotdata[i][0]);
+}
+
+fclose(f);
+
+sqlite3_finalize(stmt);
+
+return 0;} {}
+  }
+  Function {closedb()} {open private
+  } {
+    code {if(NULL != db) {
+	sqlite3_close(db);
+	db = NULL;
+}
+
+populatechoices();} {selected
+    }
+  }
+  Function {loaddata()} {open private return_type int
+  } {
+    code {if(NULL == db) {
+	fprintf(stderr, "Can't populate data without an open database\\n");
+	return 1;
+}
+
+freedata();
+
+sqlite3_stmt *stmt;
+
+const char sql_with_trip[] = "SELECT (%s) FROM obd "
+	"LEFT JOIN trip ON obd.time>trip.start AND obd.time<trip.end "
+	"WHERE trip.tripid=%s";
+
+const char sql[] = "SELECT (%s) FROM obd";
+
+char actual_sql[256];
+
+if(!tripchoice->active() || 0 == strcmp("All", tripchoice->value())) {
+	snprintf(actual_sql, sizeof(actual_sql), sql, columnchoice->value());
+} else {
+	snprintf(actual_sql, sizeof(actual_sql), sql_with_trip, columnchoice->value(), tripchoice->value());
+}
+
+int rc;
+const char *dbend;
+
+rc = sqlite3_prepare_v2(db, actual_sql, -1, &stmt, &dbend);
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Couldn't prepare statement \\"%s\\" (%i): %s\\n", actual_sql, rc, sqlite3_errmsg(db));
+	return 1;
+} else {
+	printf("SQL: %s\\n", actual_sql);
+}
+
+int rowcount = 0;
+while(SQLITE_ROW == sqlite3_step(stmt)) {
+	rowcount++;
+}
+
+sqlite3_reset(stmt);
+
+allocatedata(rowcount);
+
+rowcount = 0;
+while(SQLITE_ROW == sqlite3_step(stmt)) {
+	rawdata[rowcount][0] = sqlite3_column_double(stmt, 0);
+	rowcount++;
+}
+
+prepareplans();
+
+memcpy(plotdata, rawdata, sizeof(fftw_complex) * rowcount);
+
+renderplotdata();
+
+sqlite3_finalize(stmt);
+
+return 0;} {}
+  }
+  Function {freedata()} {private
+  } {
+    code {if(NULL != rawdata) {
+	fftw_free(rawdata);
+}
+
+if(NULL != plotdata) {
+	fftw_free(plotdata);
+}
+
+if(NULL != transformeddata) {
+	fftw_free(transformeddata);
+}
+
+plotdata = NULL;
+rawdata = NULL;
+transformeddata = NULL;
+dataitems = 0;} {}
+  }
+  Function {allocatedata(int numitems)} {private
+  } {
+    code {freedata();
+
+dataitems = numitems;
+
+int bufsize = sizeof(fftw_complex) * numitems;
+
+rawdata = (fftw_complex *)fftw_malloc(bufsize);
+plotdata = (fftw_complex *)fftw_malloc(bufsize);
+transformeddata = (fftw_complex *)fftw_malloc(bufsize);
+
+memset(rawdata, 0, bufsize);
+memset(plotdata, 0, bufsize);
+memset(transformeddata, 0, bufsize);} {}
+  }
+  Function {renderplotdata()} {open private
+  } {
+    code {if(NULL == db || NULL == rawdata || NULL == plotdata || dataitems == 0) {
+	return;
+}
+
+fftchart->clear();
+fftchart_raw->clear();
+
+int i;
+
+int x_min = (int)(dataitems * graphstart->value());
+int x_max = (int)(dataitems * graphend->value());
+
+double datamin = plotdata[x_min][0];
+double datamax = plotdata[x_min][0];
+
+for(i=x_min; i<x_max; i++) {
+	double p = plotdata[i][0];
+	fftchart->add(p);
+
+	if(p > datamax) datamax = p;
+	if(p < datamin) datamin = p;
+	
+	double q = rawdata[i][0];
+	
+	// Still look at it, so the scale doesn't twitch when clicking and unclicking the checkbox
+	if(showrawdata->value()) {
+		fftchart_raw->add(q, NULL, FL_RED);
+	}
+	
+	if(q > datamax) datamax = q;
+	if(q < datamin) datamin = q;
+}
+
+fftchart->bounds(datamin, datamax);
+fftchart_raw->bounds(datamin, datamax);
+
+chart_ymax->value(datamax);
+chart_ymin->value(datamin);
+chart_xmax->value(x_max);
+chart_xmin->value(x_min);
+
+Fl::redraw();} {}
+  }
+  Function {loadfftwwisdom()} {private
+  } {
+    code {FILE *wisdom;
+wisdom = fopen("fftwwisdom", "r");
+if(NULL != wisdom) {
+	fftw_import_wisdom_from_file(wisdom);
+	printf("Wisdom imported\\n");
+	fclose(wisdom);
+}} {}
+  }
+  Function {savefftwwisdom()} {private
+  } {
+    code {FILE *wisdom;
+wisdom = fopen("fftwwisdom", "w");
+if(NULL != wisdom) {
+	fftw_export_wisdom_to_file(wisdom);
+	printf("Wisdom exported\\n");
+	fclose(wisdom);
+}} {}
+  }
+  Function {destroyplans()} {private
+  } {
+    code {if(plans_prepared) {
+	fftw_destroy_plan(ff_forward);
+	fftw_destroy_plan(ff_backward);
+	plans_prepared = 0;
+}} {}
+  }
+  Function {prepareplans()} {private
+  } {
+    code {if(plans_prepared) {
+	destroyplans();
+}
+
+printf("About to prepare plans. This can take some time\\n");
+
+ff_forward = fftw_plan_dft_1d(dataitems, rawdata, transformeddata, FFTW_FORWARD, FFTW_ESTIMATE);
+ff_backward = fftw_plan_dft_1d(dataitems, transformeddata, plotdata, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+plans_prepared = 1;} {}
+  }
+  Function {thereandbackagain()} {open private
+  } {
+    code {if(!plans_prepared) return;
+
+fftw_execute(ff_forward);
+
+// Filter the data here
+int i;
+
+// Do this in two sweeps.
+
+// First sweep, get the min and max along each axis
+// Second sweep, purge the data
+
+// double data_i_min, data_i_max; // Imaginary min and max of data
+// double data_r_min, data_r_max; // Real min and max of data
+double data_rad_min2, data_rad_max2; // Min and max radius sq'd of data
+
+// effectively bend the cutoff curve to be more sensiotive at the bottom
+const float bendcurve = bendcurveslider->value();
+
+/*
+data_i_min = data_i_max = transformeddata[0][1];
+data_r_min = data_r_max = transformeddata[0][0];
+*/
+data_rad_min2 = data_rad_max2 = transformeddata[0][1] * transformeddata[0][1] +
+			transformeddata[0][0] * transformeddata[0][0];
+
+for(i=1; i<dataitems; i++) {
+/*
+	if(data_i_max < transformeddata[i][1]) data_i_max = transformeddata[i][1];
+	if(data_i_min > transformeddata[i][1]) data_i_min = transformeddata[i][1];
+
+	if(data_r_max < transformeddata[i][0]) data_r_max = transformeddata[i][0];
+	if(data_r_min > transformeddata[i][0]) data_r_min = transformeddata[i][0];
+
+*/
+
+	double radsquared = (transformeddata[i][1] * transformeddata[i][1])
+		+ (transformeddata[i][0] * transformeddata[i][0]);
+	if(data_rad_max2 < radsquared) data_rad_max2 = radsquared;
+	if(data_rad_min2 > radsquared) data_rad_min2 = radsquared;
+}
+/*
+printf("R: %f,%f\\nI: %f,%f\\nQ: %f,%f\\n",
+	data_r_min, data_r_max,
+	data_i_min, data_i_max,
+	data_rad_min2, data_rad_max2);
+*/
+
+int fstart = (int)(dataitems*pow(freq_min->value(),bendcurve));
+for(i=1; i<fstart; i++) {
+	transformeddata[i][0] = transformeddata[i][1] = 0;
+}
+
+int fend = (int)(dataitems*pow(freq_max->value(),bendcurve));
+for(i=dataitems-1; i>fend; i--) {
+	transformeddata[i][0] = transformeddata[i][1] = 0;
+}
+
+/*
+double i_mincutoff = pow(i_min->value(),bendcurve) * max(fabs(data_i_max), fabs(data_i_min));
+double i_maxcutoff = pow(i_max->value(),bendcurve) * max(fabs(data_i_max), fabs(data_i_min));
+
+double r_mincutoff = pow(r_min->value(),bendcurve) * max(fabs(data_r_max), fabs(data_r_min));
+double r_maxcutoff = pow(r_max->value(),bendcurve) * max(fabs(data_r_max), fabs(data_r_min));
+*/
+
+double rad_mincutoff = pow(rad_min->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
+double rad_maxcutoff = pow(rad_max->value(),bendcurve) * max(fabs(data_rad_max2), fabs(data_rad_min2));
+
+for(i=1; i<dataitems; i++) {
+	double radsquared = transformeddata[i][1] * transformeddata[i][1] +
+			transformeddata[i][0] * transformeddata[i][0];
+	if(radsquared > rad_maxcutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+	if(radsquared < rad_mincutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+	
+/*	if(fabs(transformeddata[i][1]) > i_maxcutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+	if(fabs(transformeddata[i][1]) < i_mincutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+
+	if(fabs(transformeddata[i][0]) > r_maxcutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+	if(fabs(transformeddata[i][0]) < r_mincutoff) {
+		transformeddata[i][0] = transformeddata[i][1] = 0;
+	}
+*/
+}
+
+fftw_execute(ff_backward);
+
+// Artifact of dft: the output is scaled by the size of the array 
+float divisor = (float)dataitems;
+for(i=0; i<dataitems; i++) {
+	plotdata[i][0] /= divisor;
+	plotdata[i][1] /= divisor;
+}} {}
+  }
+  Function {resetsliders()} {private
+  } {
+    code {rad_max->value(1.0);
+rad_min->value(0.0);
+
+freq_max->value(1.0);
+freq_min->value(0.0);
+
+graphend->value(1.0);
+graphstart->value(0.0);
+
+bendcurveslider->value(2.0);
+
+showrawdata->value(1);
+
+thereandbackagain();
+renderplotdata();} {}
+  }
+  Function {populatechoices()} {open private return_type int
+  } {
+    code {columnchoice->clear();
+
+tripchoice->clear();
+
+tripchoice->add("All");
+tripchoice->value(0);
+
+columnchoice->deactivate();
+tripchoice->deactivate();
+
+if(NULL == db) {
+	return 1;
+}
+
+columnchoice->activate();
+
+int rc;
+
+sqlite3_stmt *pragma_stmt; // The stmt for gathering table_info
+const char *dbend; // ignored handle for sqlite
+
+rc = sqlite3_prepare_v2(db, "PRAGMA table_info(obd)", -1, &pragma_stmt, &dbend);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Couldn't get table info in database (%i): %s\\n", rc, sqlite3_errmsg(db));
+	return 1;
+}
+
+while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
+	const char *columnname = (const char *)sqlite3_column_text(pragma_stmt, 1);
+
+	char n[64];
+	snprintf(n, sizeof(n), "\\"%s\\"", columnname);
+	columnchoice->add(n);
+}
+
+sqlite3_finalize(pragma_stmt);
+
+columnchoice->value(0);
+
+
+rc = sqlite3_prepare_v2(db, "SELECT tripid FROM trip", -1, &pragma_stmt, &dbend);
+
+if(SQLITE_OK != rc) {
+	fprintf(stderr, "Couldn't get trips in database (%i): %s\\n", rc, sqlite3_errmsg(db));
+	return 1;
+}
+
+while(SQLITE_ROW == sqlite3_step(pragma_stmt)) {
+	const char *tripid = (const char *)sqlite3_column_text(pragma_stmt, 0);
+	tripchoice->add(tripid);
+}
+
+sqlite3_finalize(pragma_stmt);
+
+tripchoice->activate();
+
+return 0;} {}
+  }
+} 

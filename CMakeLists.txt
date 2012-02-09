@@ -1,0 +1,215 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+IF(COMMAND CMAKE_POLICY)
+# Use old policy on ADD_DEFINITIONS and escaping
+	CMAKE_POLICY(SET CMP0005 OLD)
+# Use old policy to make mixing libraries with and without full paths ok
+	CMAKE_POLICY(SET CMP0003 OLD)
+ENDIF(COMMAND CMAKE_POLICY)
+
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+	SET(LINUX TRUE)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
+
+PROJECT(OBDGPSLogger)
+
+SET(OBDGPSLOGGER_MAJOR_VERSION 0)
+SET(OBDGPSLOGGER_MINOR_VERSION 16)
+
+ADD_DEFINITIONS("-DOBDGPSLOGGER_MAJOR_VERSION=${OBDGPSLOGGER_MAJOR_VERSION}")
+ADD_DEFINITIONS("-DOBDGPSLOGGER_MINOR_VERSION=${OBDGPSLOGGER_MINOR_VERSION}")
+
+# For now, assume the choices are "windows" or "posix"
+IF("${CMAKE_SYSTEM}" MATCHES "Windows")
+	ADD_DEFINITIONS(-DOBDPLATFORM_WINDOWS)
+ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
+	ADD_DEFINITIONS(-DOBDPLATFORM_POSIX)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
+
+# You probably don't want to change this
+SET(OBD_CONFIG_FILENAME ".obdgpslogger")
+
+# Default obd column names to capture
+SET(OBD_DEFAULT_COLUMNS "temp,rpm,vss,maf,throttlepos" CACHE STRING "Default columns to log")
+
+# This is the default serial port on my mac for my OBD Key
+SET(OBD_DEFAULT_SERIALPORT "/dev/cu.OBDKeyPro-DevB-1" CACHE STRING "Default serial port filename")
+
+# Only used by the UI when it launches GPSD, to add devices
+SET(OBD_GPSD_CONTROL_SOCKET "/tmp/obd_gpsd_controlsock" CACHE STRING "GPSD Control Socket (Used by UI)")
+
+# Only used by the UI when it launches GPSD, this is the default gps device
+SET(OBD_DEFAULT_GPSPORT "/dev/usbserial" CACHE STRING "GPSD default device filename (Used by UI)")
+
+# Only used by the UI when it launches GPSD, to kill it afterwards
+SET(OBD_GPSD_PIDFILE "/tmp/obd_gpsd_pid" CACHE STRING "GPSD PID File (Used by UI)")
+
+# obdftdipty saves the device in this file
+SET(OBD_FTDIPTY_DEVICE "/var/run/obdftdipty.device" CACHE STRING "File used by ftdipty to describe /dev/pts entry")
+
+# Link with this library
+SET(OBD_SQLITE_INCLUDED_LIB ON CACHE BOOL "Link with included sqlite3 library. Set to off to use systemwide copy")
+
+
+# OBDSim Defaults
+SET(OBDSIM_ELM_VERSION_STRING "ELM327 v1.3a OBDGPSLogger" CACHE STRING "OBDSim default Version String (ATI, ATZ)")
+SET(OBDSIM_ELM_DEVICE_STRING "OBDGPSLogger" CACHE STRING "OBDSim default Device String (AT@1)")
+
+
+SET(OBD_DISABLE_GUI false CACHE BOOL "Disable any UI modules")
+IF(NOT OBD_DISABLE_GUI)
+	SET(FLTK_SKIP_OPENGL true)
+	SET(FLTK_SKIP_FORMS true)
+	SET(FLTK_SKIP_IMAGES true)
+	FIND_PACKAGE(FLTK)
+ENDIF(NOT OBD_DISABLE_GUI)
+
+# Default database name
+SET(OBD_DEFAULT_DATABASE "./obdgpslogger.db" CACHE STRING "Default database filename for all obdgpslogger modules")
+
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${OBDGPSLogger_SOURCE_DIR}/cmakemodules")
+
+SET(OBD_DISABLE_GPSD "Off" CACHE BOOL "Disable gpsd support")
+IF(NOT OBD_DISABLE_GPSD)
+	FIND_PACKAGE(GPSD)
+	IF(GPSD_FOUND)
+		INCLUDE_DIRECTORIES(${GPSD_INCLUDE_DIR})
+		ADD_DEFINITIONS(-DHAVE_GPSD)
+	ELSE(GPSD_FOUND)
+		SET(OBD_ENABLE_GPSD "OFF" CACHE BOOL "Enable gps support using libgps" FORCE)
+		MESSAGE(STATUS "Couldn't find libgps")
+	ENDIF(GPSD_FOUND)
+ENDIF(NOT OBD_DISABLE_GPSD)
+
+SET(OBD_ENABLE_DBUS "OFF" CACHE BOOL "Enable dbus support")
+FIND_PACKAGE(Dbus)
+IF(OBD_ENABLE_DBUS)
+	IF(DBUS_FOUND)
+		INCLUDE_DIRECTORIES(${DBUS_INCLUDE_DIR})
+		ADD_DEFINITIONS(-DHAVE_DBUS)
+	ELSE(DBUS_FOUND)
+		SET(OBD_ENABLE_DBUS "OFF" CACHE BOOL "Enable dbus support" FORCE)
+		MESSAGE(STATUS "Couldn't find dbus")
+	ENDIF(DBUS_FOUND)
+ENDIF(OBD_ENABLE_DBUS)
+
+INCLUDE(CheckSymbolExists)
+INCLUDE(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS(ptsname_r HAVE_PTSNAME_R)
+IF(HAVE_PTSNAME_R)
+	ADD_DEFINITIONS(-DHAVE_PTSNAME_R)
+ENDIF(HAVE_PTSNAME_R)
+
+
+CONFIGURE_FILE("${OBDGPSLogger_SOURCE_DIR}/src/obdconfig.h.cmake" "${OBDGPSLogger_BINARY_DIR}/obdconfig.h")
+INCLUDE_DIRECTORIES("${OBDGPSLogger_BINARY_DIR}")
+
+SET(EXECUTABLE_OUTPUT_PATH "${OBDGPSLogger_SOURCE_DIR}/bin")
+
+# Instead of just linking with cksqlite, link with ${CKSQLITE_LIBRARIES} to get deps
+IF(OBD_SQLITE_INCLUDED_LIB)
+	SET(CKSQLITE_LIBRARIES
+		cksqlite
+	)
+ELSE(OBD_SQLITE_INCLUDED_LIB)
+	SET(CKSQLITE_LIBRARIES
+		sqlite3
+	)
+ENDIF(OBD_SQLITE_INCLUDED_LIB)
+
+# TODO: Change this to look for necessary symbols, instead
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+    SET(CKSQLITE_LIBRARIES ${CKSQLITE_LIBRARIES} pthread dl)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
+
+
+INCLUDE_DIRECTORIES(
+	src/obdinfo/
+	src/conf/
+)
+
+IF(OBD_SQLITE_INCLUDED_LIB)
+	INCLUDE_DIRECTORIES(
+		libs/sqlite3
+	)
+	ADD_SUBDIRECTORY(libs/sqlite3)
+ENDIF(OBD_SQLITE_INCLUDED_LIB)
+
+IF("${CMAKE_SYSTEM}" MATCHES "Windows")
+	MESSAGE(STATUS "Logger and GUI modules not available on windows currently")
+ELSE("${CMAKE_SYSTEM}" MATCHES "Windows")
+	ADD_SUBDIRECTORY(src/obdcomm/)
+	ADD_SUBDIRECTORY(src/logger/)
+	ADD_SUBDIRECTORY(src/gui/)
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Windows")
+
+ADD_SUBDIRECTORY(src/obdinfo/)
+ADD_SUBDIRECTORY(src/conf/)
+ADD_SUBDIRECTORY(src/analysis/)
+ADD_SUBDIRECTORY(src/kml/)
+ADD_SUBDIRECTORY(src/csv/)
+ADD_SUBDIRECTORY(src/gpx/)
+ADD_SUBDIRECTORY(src/sim/)
+ADD_SUBDIRECTORY(src/repair/)
+ADD_SUBDIRECTORY(src/ftdipty/)
+
+
+# FILE(GLOB manfiles1 ${OBDGPSLogger_SOURCE_DIR}/man/man1/*.1)
+# INSTALL(FILES ${manfiles1} DESTINATION share/man/man1)
+# FILE(GLOB manfiles5 ${OBDGPSLogger_SOURCE_DIR}/man/man5/*.5)
+# INSTALL(FILES ${manfiles5} DESTINATION share/man/man5)
+
+
+# And now, packaging...
+
+# Common things to every type of package
+SET(CPACK_PACKAGE_DESCRIPTION "Tools to log OBD and GPS data")
+SET(CPACK_PACKAGE_NAME "OBDGPSLogger")
+SET(CPACK_PACKAGE_EXECUTABLES "obdgui")
+SET(CPACK_PACKAGE_VERSION_MAJOR ${OBDGPSLOGGER_MAJOR_VERSION})
+SET(CPACK_PACKAGE_VERSION_MINOR ${OBDGPSLOGGER_MINOR_VERSION})
+SET(CPACK_PACKAGE_VERSION "${OBDGPSLOGGER_MAJOR_VERSION}.${OBDGPSLOGGER_MINOR_VERSION}")
+SET(CPACK_STRIP_FILES true)
+SET(CPACK_PACKAGE_CONTACT "chunky@icculus.org")
+SET(CPACK_RESOURCE_FILE_LICENSE "${OBDGPSLogger_SOURCE_DIR}/COPYING")
+
+
+# Always build .tar.gz and .sh files
+SET(CPACK_GENERATOR "STGZ;TGZ")
+
+
+IF(APPLE)
+	SET(CPACK_GENERATOR "${CPACK_GENERATOR};Bundle")
+	SET(CPACK_BUNDLE_ICON "${OBDGPSLogger_SOURCE_DIR}/osx/BundleIcon.icns")
+	SET(CPACK_BUNDLE_NAME "OBD GPS Logger")
+	SET(CPACK_BUNDLE_PLIST "${OBDGPSLogger_SOURCE_DIR}/osx/Info.plist")
+	SET(CPACK_BUNDLE_STARTUP_COMMAND "${OBDGPSLogger_SOURCE_DIR}/osx/StartupCommand")
+
+	IF(GPSD_DAEMON)
+		INSTALL(PROGRAMS ${GPSD_DAEMON}
+				DESTINATION sbin/)
+	ENDIF(GPSD_DAEMON)
+ELSE(APPLE)
+
+	# If we can find rpmbuild, then go for it
+	FIND_PROGRAM(RPMBUILD_TEST rpmbuild INTERNAL)
+	IF(RPMBUILD_TEST)
+		SET(CPACK_GENERATOR "${CPACK_GENERATOR};RPM")
+		SET(CPACK_RPM_PACKAGE_REQUIRES "gpsd >= 2.0")
+		SET(CPACK_RPM_PACKAGE_LICENSE "GPLv2+")
+	ENDIF(RPMBUILD_TEST)
+
+	# If we can find dpkg, build a .deb
+	#FIND_PROGRAM(DPKG_TEST dpkg INTERNAL)
+	#IF(DPKG_TEST)
+		SET(CPACK_GENERATOR "${CPACK_GENERATOR};DEB")
+		SET(CPACK_DEBIAN_PACKAGE_DEPENDS "gpsd (>=2.0)")
+		SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION ${CPACK_PACKAGE_DESCRIPTION})
+	#ENDIF(DPKG_TEST)
+
+ENDIF(APPLE)
+
+
+INCLUDE(CPack)
+
+

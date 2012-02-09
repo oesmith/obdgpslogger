@@ -1,0 +1,60 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0109 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+class OBDLogWindow {open
+} {
+  Function {OBDLogWindow()} {open
+  } {
+    Fl_Window logwindow {
+      label {OBD GPS Logger Output} open
+      xywh {755 136 625 500} type Double visible
+    } {
+      Fl_Text_Display logdata_stdout {
+        label stdout
+        xywh {25 25 285 430}
+        code0 {o->buffer(new Fl_Text_Buffer);}
+      }
+      Fl_Text_Display logdata_stderr {
+        label stderr
+        xywh {320 25 290 430}
+        code0 {o->buffer(new Fl_Text_Buffer);}
+      }
+      Fl_Button clearbutton {
+        label Clear
+        callback {clear_logs();}
+        xywh {530 460 80 25}
+      }
+      Fl_Check_Button enablestdlog {
+        label {Gather stdout and stderr}
+        xywh {320 460 190 25} down_box DOWN_BOX
+      }
+    }
+  }
+  Function {clear_logs()} {open
+  } {
+    code {Fl_Text_Buffer *b;
+b = logdata_stdout->buffer();
+if(NULL != b) b->text("");
+b = logdata_stderr->buffer();
+if(NULL != b) b->text("");} {}
+  }
+  Function {append_stderr(const char *text)} {open
+  } {
+    code {if(enablestdlog->value()) logdata_stderr->buffer()->append(text);} {}
+  }
+  Function {append_stdout(const char *text)} {open
+  } {
+    code {if(enablestdlog->value()) logdata_stdout->buffer()->append(text);} {}
+  }
+  Function {show()} {open
+  } {
+    code {logwindow->show();} {}
+  }
+  Function {hide()} {open
+  } {
+    code {logwindow->hide();} {}
+  }
+} 

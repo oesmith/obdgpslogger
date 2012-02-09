@@ -1,0 +1,11 @@
+INCLUDE_DIRECTORIES(
+	.
+)
+
+
+FILE(GLOB OBDINFO_SRCS
+	*.c *.h
+)
+
+ADD_LIBRARY(ckobdinfo STATIC ${OBDINFO_SRCS})
+

@@ -1,0 +1,419 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0300 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <unistd.h>} {} 
+
+decl {\#include <FL/Fl.H>} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
+decl {\#include "obdconfig.h"} {} 
+
+decl {\#include "obdconfigfile.h"} {public
+} 
+
+decl {\#include "obdservicecommands.h"} {} 
+
+decl {\#include "logwindow.h"} {public
+} 
+
+decl {\#include "loggerhandler.h"} {public
+} 
+
+decl {\#include "guessdevs.h"} {} 
+
+decl {\#include "convertwindow.h"} {} 
+
+decl {\#include "gpsdwizard.h"} {public
+} 
+
+decl {class obdconvertwindow;} {public
+} 
+
+decl {\#include "obdgui.h"} {public
+} 
+
+comment {Button "state machine":
+1) Execution begins.
+    Go button active
+    start and end inactive
+2) Click "Go"
+    Go button changes to "starting...", inactive
+    start and end still inactive
+3) Once logger is running
+    Change go button to "Stop", active
+    make start active. end still inactive
+4a) Clicking start
+     make start inactive, end active
+4b) Clicking end
+     make start active, end inactive
+5) Click "Stop"} {in_source not_in_header
+} 
+
+class OBDUI {open
+} {
+  Function {OBDUI()} {open
+  } {
+    code {mLH = NULL;} {}
+    code {configfile = obd_loadConfig(0);} {}
+    Fl_Window MainWindow {
+      label {OBD GPS Logger} open
+      private xywh {830 91 545 390} type Double align 80 resizable visible
+    } {
+      Fl_Group alldials_group {open
+        private xywh {25 150 495 215} deactivate
+      } {
+        Fl_Group vss_group {open
+          private xywh {25 150 145 85}
+        } {
+          Fl_Dial vss_dial {
+            label {Vehicle Speed}
+            private xywh {25 150 145 85} type Line
+            code0 {struct obdservicecmd *osc = obdGetCmdForColumn("vss");}
+            code1 {if(NULL == osc) o->range(0,200);}
+            code2 {else o->range(osc->min_value,osc->max_value);}
+          }
+          Fl_Value_Output vss_value {
+            private xywh {75 206 45 24}
+          }
+        }
+        Fl_Group throttlepos_group {open
+          private xywh {25 260 145 85}
+        } {
+          Fl_Dial throttlepos_dial {
+            label {Throttle Position}
+            private xywh {25 260 145 85} type Line
+            code0 {struct obdservicecmd *osc = obdGetCmdForColumn("throttle");}
+            code1 {if(NULL == osc) o->range(0,200);}
+            code2 {else o->range(osc->min_value,osc->max_value);}
+          }
+          Fl_Value_Output throttlepos_value {
+            private xywh {75 316 45 24}
+          }
+        }
+        Fl_Group rpm_group {open
+          private xywh {200 150 145 85}
+        } {
+          Fl_Dial rpm_dial {
+            label {Engine RPM}
+            private xywh {200 150 145 85} type Line
+            code0 {struct obdservicecmd *osc = obdGetCmdForColumn("rpm");}
+            code1 {if(NULL == osc) o->range(0,7000);}
+            code2 {else o->range(osc->min_value,osc->max_value);}
+          }
+          Fl_Value_Output rpm_value {
+            private xywh {250 206 45 24}
+          }
+        }
+        Fl_Group temp_group {open
+          private xywh {200 260 145 85}
+        } {
+          Fl_Dial temp_dial {
+            label {Oil Temperature}
+            private xywh {200 260 145 85} type Line
+            code0 {struct obdservicecmd *osc = obdGetCmdForColumn("temp");}
+            code1 {if(NULL == osc) o->range(0,200);}
+            code2 {else o->range(osc->min_value,osc->max_value);}
+          }
+          Fl_Value_Output temp_value {
+            private xywh {250 316 45 24}
+          }
+        }
+        Fl_Group maf_group {open
+          private xywh {375 150 145 85}
+        } {
+          Fl_Dial maf_dial {
+            label {Mass Airflow}
+            private xywh {375 150 145 85} type Line
+            code0 {struct obdservicecmd *osc = obdGetCmdForColumn("maf");}
+            code1 {if(NULL == osc) o->range(0,2000);}
+            code2 {else o->range(osc->min_value,osc->max_value);}
+          }
+          Fl_Value_Output maf_value {
+            private xywh {425 206 45 24}
+          }
+        }
+        Fl_Group {} {
+          label {GPS Position} open
+          private xywh {410 281 105 84}
+        } {
+          Fl_Value_Output gpslat {
+            label Latitude
+            private xywh {410 281 105 24}
+          }
+          Fl_Value_Output gpslon {
+            label Longitude
+            private xywh {410 311 105 24}
+          }
+          Fl_Value_Output gpsalt {
+            label Altitude
+            private xywh {410 341 105 24}
+          }
+        }
+      }
+      Fl_Menu_Bar menubar {open
+        private xywh {0 0 600 20} align 20
+      } {
+        Submenu {} {
+          label File open
+          private xywh {0 0 100 20} labelsize 14
+        } {
+          MenuItem {} {
+            label Quit
+            callback {MainWindow->hide();
+mLogWindow->hide();}
+            private xywh {0 0 100 20} labelsize 14
+          }
+        }
+        Submenu {} {
+          label Window open
+          private xywh {0 0 100 20} labelsize 14
+        } {
+          MenuItem {} {
+            label {Raw Output}
+            callback {mLogWindow->show();}
+            private xywh {0 0 100 20} labelsize 14
+          }
+        }
+      }
+      Fl_Group loggeroptions {open
+        private xywh {15 20 505 115}
+      } {
+        Fl_Input_Choice serialfilename {
+          label {OBD Device} open
+          xywh {115 62 300 26}
+        } {}
+        Fl_File_Input logfilename {
+          label Logfile
+          private xywh {115 25 300 30} when 0
+          code0 {logfilename->value(OBD_DEFAULT_DATABASE);}
+        }
+        Fl_Button logchoosebutton {
+          label {Choose...}
+          callback {Fl_File_Chooser f(logfilename->value(),
+  "OBDGPS Logfiles (*.db)\\tAll Files (*)",
+  Fl_File_Chooser::CREATE, "Choose OBD GPS Logfile" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  logfilename->value(f.value());}
+          private xywh {420 25 95 30}
+        }
+        Fl_Button serialchoosebutton {
+          label {Choose...}
+          callback {Fl_File_Chooser f("/dev/",
+  "All Files (*)",
+  Fl_File_Chooser::SINGLE, "Choose Serial Port" );
+f.show();
+while(f.shown()) {
+  Fl::check();
+}
+if(0 < f.count())
+  serialfilename->value(f.value());}
+          private xywh {420 60 95 30}
+        }
+      }
+      Fl_Button gobutton {
+        label Go
+        callback {if(mLH) {
+  if(TRIP_STOPPED != mTripState) {
+    mLH->endtrip();
+    sleep(1);
+  }
+  delete mLH;
+  mLH = NULL;
+  setUIRunning(UI_STOPPED);
+} else {
+  mLH = new loggerhandler(this);
+  setUIRunning(UI_STARTING);
+}}
+        private xywh {55 95 120 45} resizable
+      }
+      Fl_Button starttripbutton {
+        label {Start Trip}
+        callback {if(mLH) {
+  mLH->starttrip();
+  setUIRunning(UI_STARTED, TRIP_STARTED);
+}} selected
+        private xywh {180 95 115 20} hide deactivate
+      }
+      Fl_Button endtripbutton {
+        label {End Trip}
+        callback {if(mLH) {
+  mLH->endtrip();
+  setUIRunning(UI_STARTED, TRIP_STOPPED);
+}}
+        private xywh {180 120 115 20} hide deactivate
+      }
+      Fl_Button convertbutton {
+        label {Convert log  to ...}
+        callback {mConvertWindow->show();}
+        private xywh {360 110 155 25}
+      }
+      Fl_Button gpsdwizardbutton {
+        label {GPSD Launch Wizard}
+        callback {mGpsdWindow->show();}
+        private xywh {190 110 160 25}
+      }
+    }
+    code {setUIRunning(UI_STOPPED);} {}
+    code {mLogWindow = new OBDLogWindow();
+mLogWindow->hide();} {}
+    code {mConvertWindow = new obdconvertwindow(this);
+mConvertWindow->hide();
+// mLogWindow->append_stdout("Cookies out");
+// mLogWindow->append_stderr("Cookies err");} {}
+    code {reset_dials();} {}
+    code {mGpsdWindow = new GPSDWizardWindow();
+mGpsdWindow->hide();} {}
+    code {populateSerialDevs(serialfilename, NULL==configfile?OBD_DEFAULT_SERIALPORT:configfile->obd_device);} {}
+  }
+  Function {~OBDUI()} {open
+  } {
+    code {if(NULL != mLH) {
+  delete mLH;
+  mLH = NULL;
+}
+delete mLogWindow;
+delete mConvertWindow;
+delete mGpsdWindow;
+
+obd_freeConfig(configfile);} {}
+  }
+  Function {setUIRunning(enum ui_state newstate, enum trip_state tripstate = TRIP_NONE)} {open
+  } {
+    code {mUIState = newstate;
+mTripState = tripstate;
+
+switch(newstate) {
+  case UI_STOPPED:
+    gobutton->activate();
+    gobutton->copy_label("Go");
+    loggeroptions->activate();
+    convertbutton->activate();
+    gpsdwizardbutton->activate();
+    reset_dials();
+    alldials_group->deactivate();
+    break;
+  case UI_STARTING:
+    gobutton->deactivate();
+    gobutton->copy_label("Starting...");
+    loggeroptions->deactivate();
+    convertbutton->deactivate();
+    gpsdwizardbutton->deactivate();
+    alldials_group->deactivate();
+    break;
+  case UI_STARTED:
+    gobutton->activate();
+    gobutton->copy_label("Stop");
+    loggeroptions->deactivate();
+    convertbutton->deactivate();
+    gpsdwizardbutton->deactivate();
+    alldials_group->activate();
+    break;
+}
+
+switch(tripstate) {
+  case TRIP_STOPPED:
+    starttripbutton->activate();
+    endtripbutton->deactivate();
+    break;
+  case TRIP_STARTED:
+    starttripbutton->deactivate();
+    endtripbutton->activate();
+    break;
+  case TRIP_NONE:
+    starttripbutton->deactivate();
+    endtripbutton->deactivate();
+    break;
+}} {}
+  }
+  Function {getOBDHandler()} {return_type {loggerhandler *}
+  } {
+    code {return mLH;} {}
+  }
+  Function {show(int argc, char **argv)} {} {
+    code {MainWindow->show(argc,argv);} {}
+  }
+  Function {getLogfilename()} {return_type {const char *}
+  } {
+    code {return logfilename->value();} {}
+  }
+  Function {getSerialfilename()} {return_type {const char *}
+  } {
+    code {return serialfilename->value();} {}
+  }
+  Function {checkLogger()} {} {
+    code {if(NULL != mLH) {
+  mLH->checkRunning(false);
+
+  if(!mLH->isUsable()) {
+    delete mLH;
+    mLH = NULL;
+  }
+}
+
+if(NULL == mLH) {
+  setUIRunning(UI_STOPPED);
+} else {
+  mLH->pulse();
+  if(mLH->isStarted()) {
+    if(mUIState == UI_STARTING) {
+      setUIRunning(UI_STARTED, TRIP_STOPPED);
+    }
+  }
+}} {}
+  }
+  Function {append_stderr_log(const char *text)} {} {
+    code {mLogWindow->append_stderr(text);} {}
+  }
+  Function {append_stdout_log(const char *text)} {} {
+    code {mLogWindow->append_stdout(text);} {}
+  }
+  decl {loggerhandler *mLH;} {}
+  decl {enum ui_state mUIState;} {}
+  decl {enum trip_state mTripState;} {}
+  decl {OBDLogWindow *mLogWindow;} {}
+  decl {obdconvertwindow *mConvertWindow;} {}
+  decl {GPSDWizardWindow *mGpsdWindow;} {}
+  decl {struct OBDGPSConfig *configfile;} {public
+  }
+  Function {reset_dials()} {} {
+    code {setvss(vss_dial->minimum());
+setrpm(rpm_dial->minimum());
+setmaf(maf_dial->minimum());
+setthrottlepos(throttlepos_dial->minimum());
+settemp(temp_dial->minimum());
+setgps(0,0,0);} {}
+  }
+  Function {setvss(float val)} {} {
+    code {vss_dial->value(val);
+vss_value->value(val);} {}
+  }
+  Function {setrpm(float val)} {} {
+    code {rpm_dial->value(val);
+rpm_value->value(val);} {}
+  }
+  Function {setmaf(float val)} {} {
+    code {maf_dial->value(val);
+maf_value->value(val);} {}
+  }
+  Function {setthrottlepos(float val)} {} {
+    code {throttlepos_dial->value(val);
+throttlepos_value->value(val);} {}
+  }
+  Function {settemp(float val)} {} {
+    code {temp_dial->value(val);
+temp_value->value(val);} {}
+  }
+  Function {setgps(float lat, float lon, float alt)} {} {
+    code {gpslat->value(lat);
+gpslon->value(lon);
+gpsalt->value(alt);} {}
+  }
+} 

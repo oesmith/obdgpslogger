@@ -1,0 +1,29 @@
+This package was debianized by Kevron Rees <tripzero@nextabyte.com> on
+Fri, 04 Sep 2009 20:50:40 -0700.
+
+It was downloaded from http://icculus.org/obdgpslogger
+
+Upstream Author: Gary Briggs <chunky@icculus.org>
+
+Copyright:
+	(C) 2009-10 Gary Briggs <chunky@icculus.org>
+	(C) 2009 Michael Carpenter <malcom2073@gmail.com>
+
+You are free to distribute this software under the terms of
+the GNU General Public License version 2 or later.
+On Debian systems, the complete text of the GNU General Public
+License can be found in the file /usr/share/common-licenses/GPL-2
+
+Some files in the original source have the copyright deliberately
+disclaimed on them:
+  libs/sqlite3/*.{c,h}
+  src/sim/generators/dlopen/test/test_dlopen.c
+  src/sim/generators/dlopen/simdl_datasource.h
+  doc/udev_delay.sh
+
+
+The Debian packaging is copyright:
+	(C) 2009-10 Gary Briggs <chunky@icculus.org>
+	(C) 2009 Kevron Rees <tripzero@nextabyte.com>
+and is licensed under the GPL version 3, 
+see /usr/share/common-licenses/GPL-3

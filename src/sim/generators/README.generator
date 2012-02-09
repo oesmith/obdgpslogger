@@ -1,0 +1,38 @@
+How to write a generator for obdsim
+
+
+Note: By convention, I will refer to the name of your generator-to-be
+as {generator}, or {GENERATOR} if you should uppercase it.
+
+1) Start by looking at datasource.h
+  It contains a struct, "obdsim_generator", containing functions you
+    must implement.
+
+2) The easiest generator to understand is in /generators/random/
+  Copy /generators/random/ to generators/{generator}/
+
+2a) Look at the C files
+  It #includes "datasource.h", then creates the functions required
+    by datasource.h.
+  By convention, all the functions are named {generator}_simgen_{function}.
+  At the end of the file, we create the obdsim_generator struct.
+
+2b) Look at the CMakeInclude.cmake files
+  Edit this and replace all instances of RANDOM with {GENERATOR},
+    and random with {generator}
+  If you need extra libraries for your generator, add them similarly at
+    the end of GENERATOR_LIBS
+
+3) Open sim/obdsim.c
+  Your plugin should be added in two places, both near the top of the file:
+    first, an extern to declare it without #including anything.
+    second, added to the list of available_generators.
+  Note that each instance is wrapped with #ifdef OBDSIMGEN_{GENERATOR}
+
+
+Project-wide conventions: If your generator will add external dependencies,
+   it should default to Off.
+
+
+Gary "Chunky Ks" Briggs
+<chunky@icculus.org>

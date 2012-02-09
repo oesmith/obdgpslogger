@@ -1,0 +1,34 @@
+FIND_PACKAGE(libftdi)
+
+IF(NOT LIBFTDI_FOUND)
+	MESSAGE(STATUS "Couldn't find libftdi, required for building obdftdipty")
+ENDIF(NOT LIBFTDI_FOUND)
+
+IF(LIBFTDI_FOUND)
+	INCLUDE_DIRECTORIES(
+		${LIBFTDI_INCLUDE_DIR}
+		.
+	)
+
+	FILE(GLOB OBDFTDIPTY_SRCS
+		*.c *.h
+	)
+
+	SET(OBDFTDIPTY_LIBS
+		${LIBFTDI_LIBRARY}
+		ckobdconfigfile
+		ckobdinfo
+	)
+
+	ADD_EXECUTABLE(obdftdipty ${OBDFTDIPTY_SRCS})
+
+	TARGET_LINK_LIBRARIES(obdftdipty ${OBDFTDIPTY_LIBS})
+
+	INSTALL(TARGETS obdftdipty
+		RUNTIME DESTINATION bin)
+
+	INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdftdipty.1
+        	DESTINATION share/man/man1)
+
+ENDIF(LIBFTDI_FOUND)
+

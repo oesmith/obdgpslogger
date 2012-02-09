@@ -1,0 +1,11 @@
+obdgpslogger (0.16-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Gary Briggs <chunky@icculus.org>  Thu, 26 May 2011 11:58:32 -0700
+
+obdgpslogger (0.15-1) unstable; urgency=low
+
+  * Initial Debian release (Closes: #580176)
+
+ -- Gary Briggs <chunky@icculus.org>  Sun, 15 Aug 2010 03:09:10 -0700

@@ -1,0 +1,64 @@
+IF(NOT OBD_DISABLE_GUI)
+	IF(NOT FLTK_FLUID_EXECUTABLE)
+		MESSAGE(STATUS "Couldn't find fluid: required for building GUI")
+	ENDIF(NOT FLTK_FLUID_EXECUTABLE)
+	IF(NOT FLTK_FOUND)
+		MESSAGE(STATUS "Couldn't find fltk: required for building GUI")
+	ENDIF(NOT FLTK_FOUND)
+
+
+	IF(FLTK_FOUND AND FLTK_FLUID_EXECUTABLE)
+
+		INCLUDE_DIRECTORIES(
+			.
+			../obdinfo/
+			${FLTK_INCLUDE_DIR}
+		)
+
+		FILE(GLOB OBDGUI_FL_GLOB
+			*.fl
+		)
+
+		# GLOB includes a bunch of path prefix which confuses FLTK_WRAP_UI
+		FOREACH(OBDGUI_FL_SRC ${OBDGUI_FL_GLOB})
+			GET_FILENAME_COMPONENT(ONE_FL_SRC ${OBDGUI_FL_SRC} NAME)
+			SET(OBDGUI_FL_SRCS ${OBDGUI_FL_SRCS} ${ONE_FL_SRC})
+		ENDFOREACH(OBDGUI_FL_SRC)
+
+		FLTK_WRAP_UI(ckobdfl ${OBDGUI_FL_SRCS})
+
+		ADD_LIBRARY(ckobdfl STATIC ${ckobdfl_FLTK_UI_SRCS})
+
+
+		FILE(GLOB OBDGUI_SRCS
+			*.c
+			*.cpp
+			*.h
+		)
+
+		SET(OBDGUI_SRCS ${OBDGUI_SRCS})
+
+		SET(OBDGUI_LIBS
+			ckobdfl
+			ckobdinfo
+			ckobdconfigfile
+			${FLTK_LIBRARIES}
+		)
+
+		IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+       		SET(OBDGUI_LIBS ${OBDGUI_LIBS} pthread dl)
+		ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
+
+		ADD_EXECUTABLE(obdgui ${OBDGUI_SRCS})
+
+		TARGET_LINK_LIBRARIES(obdgui ${OBDGUI_LIBS})
+
+		INSTALL(TARGETS obdgui
+			RUNTIME DESTINATION bin)
+		INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdgui.1
+			DESTINATION share/man/man1)
+
+
+	ENDIF(FLTK_FOUND AND FLTK_FLUID_EXECUTABLE)
+ENDIF(NOT OBD_DISABLE_GUI)
+

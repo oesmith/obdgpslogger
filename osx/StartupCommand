@@ -1,0 +1,14 @@
+#!/bin/sh
+
+OBD_BUNDLE="`echo "$0" | sed -e 's/\/Contents\/MacOS\/OBD GPS Logger//'`"
+OBD_RESOURCES="$OBD_BUNDLE/Contents/Resources"
+
+
+# Suffix the path to gpsd, in case they have their own installed
+# Assume that we want the version of the other tools we bundled, though
+PATH=$OBD_RESOURCES/bin:$PATH:$OBD_RESOURCES/sbin
+export PATH
+
+exec "$OBD_RESOURCES/bin/obdgui"
+
+

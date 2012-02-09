@@ -1,0 +1,10 @@
+# Copy this file into /etc/udev/rules.d/ so that appropriate priviliges
+#   are granted to users in the "users" group to run ftdipty
+
+#FT2232 Adapter
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6010", GROUP:="users", MODE:="0660"
+#FT232 Adapter
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6001", GROUP:="users", MODE:="0660"
+#FT Adapter
+ACTION=="add", BUS=="usb", SYSFS{idVendor}=="0403", SYSFS{idProduct}=="6006", GROUP:="users", MODE:="0660"
+

@@ -1,0 +1,29 @@
+INCLUDE_DIRECTORIES(
+	.
+)
+
+SET(LIBOBDREPAIR_SRCS
+	obdrepair.c  obdrepair.h
+)
+
+ADD_LIBRARY(ckobdrepair STATIC ${LIBOBDREPAIR_SRCS})
+
+SET(OBDREPAIRMAIN_SRCS
+	obdrepairmain.c
+)
+
+SET(OBDREPAIRMAIN_LIBS
+	ckobdrepair
+	${CKSQLITE_LIBRARIES}
+)
+
+ADD_EXECUTABLE(obdlogrepair ${OBDREPAIRMAIN_SRCS})
+
+TARGET_LINK_LIBRARIES(obdlogrepair ${OBDREPAIRMAIN_LIBS})
+
+INSTALL(TARGETS obdlogrepair
+	RUNTIME DESTINATION bin)
+
+INSTALL(FILES ${OBDGPSLogger_SOURCE_DIR}/man/man1/obdlogrepair.1
+	DESTINATION share/man/man1)
+

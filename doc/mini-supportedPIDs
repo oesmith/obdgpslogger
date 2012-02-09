@@ -1,0 +1,45 @@
+kibbles-2:obdgpslogger chunky$ ./bin/obdgpslogger -p
+Opening serial port /dev/cu.OBDKeyPro-DevB-1, this can take a while
+Successfully connected to serial port. Will log obd data
+Your OBD Device claims to support PIDs:
+01: Monitor status since DTCs cleared
+03: Fuel system 1 and 2 status
+04: Calculated LOAD Value
+05: Engine Coolant Temperature
+06: Short Term Fuel Trim - Bank 1
+07: Long Term Fuel Trim - Bank 1
+0B: Intake Manifold Absolute Pressure
+0C: Engine RPM
+0D: Vehicle Speed Sensor
+0E: Ignition Timing Advance for #1 Cylinder
+0F: Intake Air Temperature
+10: Air Flow Rate from Mass Air Flow Sensor
+11: Absolute Throttle Position
+13: Location of Oxygen Sensors
+15: Bank 1 - Sensor 2/Bank 1 - Sensor 2 Oxygen Sensor Output Voltage / Short Term Fuel Trim
+1C: OBD requirements to which vehicle is designed
+1F: Time Since Engine Start
+20: PIDs supported 21-40
+21: Distance Travelled While MIL is Activated
+23: Fuel Rail Pressure (diesel)
+2E: Commanded Evaporative Purge
+2F: Fuel Level Input
+30: Number of warm-ups since diagnostic trouble codes cleared
+31: Distance since diagnostic trouble codes cleared
+33: Barometric Pressure
+34: Bank 1 - Sensor 1/Bank 1 - Sensor 1 (wide range O2S) Oxygen Sensors Equivalence Ratio (lambda) / Current
+3C: Catalyst Temperature Bank 1 /  Sensor 1
+40: PIDs supported 41-60
+41: Monitor status this driving cycle
+42: Control module voltage
+43: Absolute Load Value
+44: Commanded Equivalence Ratio
+45: Relative Throttle Position
+46: Ambient air temperature
+47: Absolute Throttle Position B
+49: Accelerator Pedal Position D
+4A: Accelerator Pedal Position E
+4C: Commanded Throttle Actuator Control
+56: unknown
+kibbles-2:obdgpslogger chunky$ 
+

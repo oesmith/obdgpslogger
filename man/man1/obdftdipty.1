@@ -1,0 +1,41 @@
+.TH obdftdipty 1
+.SH NAME
+obdftdipty \- Proxy a FTDI device using libftdi to a posix pty
+
+.SH SYNOPSIS
+.B obdftdipty [ options ]
+
+.SH DESCRIPTION
+.IX Header "DESCRIPTION"
+Small tool to proxy FTDI serial devices using libftdi to a posix
+pty. Specifically useful for systems without the ftdi kernel module,
+but wishing to use OBDII software expecting a serial device entry in /dev.
+
+.SH OPTIONS
+.IX Header "OPTIONS"
+.IP "-c|--modifyconf"
+Modify the config file /var/run/obdftdipty.device according to
+dot-obdgpslogger(5) after successfully setting up pty
+.IP "-w|--world-accessible"
+After successfully setting up the pty, set world-accessible [666]
+permissions on it
+.IP "-b|--baudrate <rate>"
+Attempt to set ftdi baudrate to this after launching.
+.IP "-V|--vendorid <hex vendor id>"
+Use this vendorid when looking for devices
+.IP "-D|--deviceid <hex device id>"
+Use this deviceid when looking for devices
+.IP "-d|--daemonise"
+Daemonise after successful setup
+.IP "-v|--version"
+Print out version number and exit.
+.IP "-h|--help"
+Print out help and exit.
+ 
+.SH SEE ALSO
+.IX Header "SEE ALSO"
+.BR "obdgpslogger(1)"
+
+.SH AUTHORS
+Gary "Chunky Ks" Briggs <chunky@icculus.org>
+

@@ -1,0 +1,11 @@
+
+INCLUDE_DIRECTORIES(
+	.
+)
+
+SET(SQLITE_SRCS
+	sqlite3.c
+)
+
+ADD_LIBRARY(cksqlite STATIC ${SQLITE_SRCS})
+
